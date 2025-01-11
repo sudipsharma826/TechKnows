@@ -102,7 +102,7 @@ export default function Header() {
                 pill
                 size="sm"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="!p-2.5"
+                className="!p-0"
               >
                 {theme === 'dark' ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
               </Button>
@@ -156,7 +156,7 @@ export default function Header() {
                 pill
                 size="sm"
                 onClick={() => setIsSearchVisible(!isSearchVisible)}
-                className="!p-2.5"
+                className="!p-0.5"
               >
                 <FiSearch className="h-5 w-5" />
               </Button>
@@ -167,7 +167,7 @@ export default function Header() {
                 pill
                 size="sm"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="!p-2.5"
+                className="!p-0"
               >
                 {theme === 'dark' ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
               </Button>
@@ -219,7 +219,7 @@ export default function Header() {
                 pill
                 size="sm"
                 onClick={toggleMobileMenu}
-                className="!p-2.5"
+                className="!p-0"
               >
                 <FiMenu className="h-5 w-5" />
               </Button>
