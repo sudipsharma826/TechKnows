@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Navbar, TextInput, Button, Avatar } from 'flowbite-react'
 import { useTheme } from 'next-themes'
-import { FiSearch, FiSun, FiMoon, FiMenu, FiEdit, FiChevronDown } from 'react-icons/fi'
+import { FiSearch, FiSun, FiMoon, FiMenu, FiEdit } from 'react-icons/fi'
+import { SignedIn , SignedOut,SignInButton,UserButton} from '@clerk/nextjs'
+import { dark, light} from '@clerk/themes'
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
@@ -106,9 +108,26 @@ export default function Header() {
               >
                 {theme === 'dark' ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
               </Button>
+              {/* For clerk user */}
+                <Button gradientDuoTone='purpleToBlue' outline>
+                  <SignedIn>
+                    <UserButton 
+                    appearance={
+                      {
+                       baseTheme: theme === 'dark' ? dark : light,
+                      }
+                    }/>
+                  </SignedIn>
+
+                  <SignedOut>
+                    <Link href="/sign-in">
+                      LogIn
+                    </Link>
+                  </SignedOut>
+                </Button>
 
               {/* Avatar and Dropdown */}
-              <div className="relative">
+              {/* <div className="relative">
                 <Avatar
                   alt="User Avatar"
                   img="https://media.licdn.com/dms/image/v2/D4D35AQH8p1LnmX69Ig/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1735264484705?e=1737118800&v=beta&t=yuGCaVv8zDoBJzFrDFZhIfcO2s9ydHpE7wb7TyXhTeQ" // Placeholder avatar, replace with dynamic data if needed
@@ -146,7 +165,7 @@ export default function Header() {
                     </ul>
                   </div>
                 )}
-              </div>
+              </div> */}
             </div>
 
             {/* Mobile Navigation */}
@@ -174,7 +193,24 @@ export default function Header() {
 
               {/* Avatar for Mobile */}
               <div className="relative">
-                <Avatar
+                {/* For clerk user */}
+                {console.log(theme)}
+                <Button gradientDuoTone='purpleToBlue' outline>
+                  <SignedIn>
+                    <UserButton
+                    appearance={
+                      {
+                       baseTheme: theme === 'dark' ? dark : light,
+                      }
+                    } />
+                  </SignedIn>
+                  <SignedOut>
+                  <Link href="/sign-in">
+                      Login
+                    </Link>
+                  </SignedOut>
+                </Button>
+                {/* <Avatar
                   alt="User Avatar"
                   img="https://media.licdn.com/dms/image/v2/D4D35AQH8p1LnmX69Ig/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1735264484705?e=1737118800&v=beta&t=yuGCaVv8zDoBJzFrDFZhIfcO2s9ydHpE7wb7TyXhTeQ" // Placeholder avatar
                   rounded
@@ -210,7 +246,7 @@ export default function Header() {
                       </li>
                     </ul>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Mobile Menu Toggle */}
@@ -263,7 +299,7 @@ export default function Header() {
                 ))}
 
                 <Link
-                  href="/signup"
+                  href="/sign-up"
                   className="w-full"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
