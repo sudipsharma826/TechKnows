@@ -194,7 +194,7 @@ export default function Header() {
               {/* Avatar for Mobile */}
               <div className="relative">
                 {/* For clerk user */}
-                {console.log(theme)}
+                
                 <Button gradientDuoTone='purpleToBlue' outline>
                   <SignedIn>
                     <UserButton

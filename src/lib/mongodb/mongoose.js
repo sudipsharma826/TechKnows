@@ -14,10 +14,7 @@ async function connect() {
   try {
     // Connect to MongoDB
     const db = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
+      
     });
 
     // Set the connection state to true when the connection is successful
@@ -30,4 +27,5 @@ async function connect() {
   }
 }
 
-export { connect };
+// Export the function directly
+export default connect;

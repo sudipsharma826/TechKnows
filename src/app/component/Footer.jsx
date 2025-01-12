@@ -22,11 +22,11 @@ export default function Footer() {
               Discover amazing content and stay connected with our community.
             </p>
             <div className="flex space-x-4">
-              <FlowbiteFooter.Icon href="#" icon={BsFacebook} className="hover:text-blue-600" />
-              <FlowbiteFooter.Icon href="#" icon={BsInstagram} className="hover:text-pink-600" />
+              <FlowbiteFooter.Icon href="https://www.facebook.com/sudipsharma.np/" icon={BsFacebook} className="hover:text-blue-600" />
               <FlowbiteFooter.Icon href="#" icon={BsTwitter} className="hover:text-blue-400" />
-              <FlowbiteFooter.Icon href="#" icon={BsLinkedin} className="hover:text-blue-700" />
-              <FlowbiteFooter.Icon href="#" icon={BsGithub} className="hover:text-gray-900 dark:hover:text-white" />
+              <FlowbiteFooter.Icon href="https://www.linkedin.com/in/sudipsharmanp/" icon={BsLinkedin} className="hover:text-blue-700" />
+              <FlowbiteFooter.Icon href="https://github.com/sudipsharma826" icon={BsGithub} className="hover:text-gray-900 dark:hover:text-white" />
+              <FlowbiteFooter.Icon href="https://www.instagram.com/sudeep_sharma.np/" icon={BsInstagram} className="hover:text-pink-600" />
             </div>
           </div>
 
