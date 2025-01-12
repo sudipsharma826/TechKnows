@@ -1,41 +1,33 @@
 import mongoose from 'mongoose';
 
-let initialized = false;
+// This will store the connection state
+const connection = {};
 
-export const connect = async () => {
-  if (initialized) {
-    console.log('Already connected to MongoDB');
+// Function to connect to the MongoDB database
+async function connect() {
+  // Check if the connection object is already set to 'true' (i.e., connected)
+  if (connection.isconnected) {
+    console.log('Already connected');
     return;
   }
-
-  // Set mongoose options to avoid deprecated warnings
-  mongoose.set('strictQuery', false); // depending on your use case, you might want to set it to false
-  
-  // Check if MONGODB_URI is defined
-  if (!process.env.MONGODB_URI) {
-    console.log('MONGODB_URI is not set in environment variables');
-    return;
-  }
-
-  console.log('Connecting to MongoDB', process.env.MONGODB_URI);
 
   try {
-    // Check if the database connection is already established
-    if (mongoose.connection.readyState === 1) {
-      console.log('Already connected to MongoDB');
-      return;
-    }
-
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'next-blog',
+    const db = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true,
     });
 
-    console.log('Connected to MongoDB');
-    initialized = true;
+    // Set the connection state to true when the connection is successful
+    connection.isconnected = db.connections[0].readyState === 1; // 1 means connected
+
+    console.log('Connected to the database');
   } catch (error) {
-    console.log('Error connecting to MongoDB:', error);
+    console.error('Error connecting to database: ', error);
+    process.exit(1); // Exit the process on failure
   }
-};
+}
+
+export { connect };
