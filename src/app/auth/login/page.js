@@ -1,12 +1,9 @@
 "use client";
 import { Alert, Button, Label, Spinner, TextInput } from 'flowbite-react';
 import { useState, useEffect } from 'react';
-
 import { FiEdit } from 'react-icons/fi';
 import AdSpaceContainer from '@/app/component/AdSense';
-
-import { useRouter } from 'next/navigation'
-
+import { useRouter } from 'next/navigation';
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -30,7 +27,6 @@ const SignInPage = () => {
     try {
       setLoading(true);
 
-     
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -40,11 +36,10 @@ const SignInPage = () => {
       });
 
       if (response.ok) {
-        const {user}= await response.json();
-
+        const { user } = await response.json(); // user is extracted here
         router.push('/');
 
-        console.log('User signed in successfully', data);
+        console.log('User signed in successfully', user); // log the user object
       } else {
         setErrorMessage("Invalid email or password");
       }
@@ -86,7 +81,7 @@ const SignInPage = () => {
                   </p>
                 </div>
                 <div className="text-center">
-                    <AdSpaceContainer />
+                  <AdSpaceContainer />
                 </div>
               </div>
             </div>
