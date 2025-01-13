@@ -1,12 +1,11 @@
 "use client";
 import { Alert, Button, Label, Spinner, TextInput } from 'flowbite-react';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';  // Using Next.js Link instead of react-router's Link
+
 import { FiEdit } from 'react-icons/fi';
 import AdSpaceContainer from '@/app/component/AdSense';
-import { useDispatch } from 'react-redux';
-import { login } from '@/lib/redux/userSlice';
-import { useRouter } from 'next/router'
+
+import { useRouter } from 'next/navigation'
 
 
 const SignInPage = () => {
@@ -14,7 +13,7 @@ const SignInPage = () => {
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);  // For loading state
   const [errorMessage, setErrorMessage] = useState("");  // Error message state
-  const dispatch = useDispatch();
+
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -42,7 +41,7 @@ const SignInPage = () => {
 
       if (response.ok) {
         const {user}= await response.json();
-        dispatch(login(user));
+
         router.push('/');
 
         console.log('User signed in successfully', data);
