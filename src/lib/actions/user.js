@@ -1,12 +1,15 @@
 import User from '../../lib/models/userModel.js';
-import  connect from '../../lib/mongodb/mongoose.js';
+import connect from '../../lib/mongodb/mongoose.js';
+
 export const createOrUpdateUser = async (
   id,
   first_name,
   last_name,
   image_url,
-  email_addresses,
-  username
+  email_address,
+  username,
+  created_at,
+  updated_at
 ) => {
   try {
     await connect();
@@ -17,22 +20,30 @@ export const createOrUpdateUser = async (
           firstName: first_name,
           lastName: last_name,
           profilePicture: image_url,
-          email: email_addresses[0].email_address,
+          email: email_address[0].email_address,
           username,
+          createdAt: created_at,
+          updatedAt: updated_at,
         },
       },
       { new: true, upsert: true }
     );
     return user;
   } catch (error) {
-    console.log('Error creating or updating user:', error);
+    console.error('Error in createOrUpdateUser:', error);
+    throw error;
   }
 };
+
 export const deleteUser = async (id) => {
   try {
     await connect();
-    await User.findOneAndDelete({ clerkId: id });
+    const result = await User.findOneAndDelete({ clerkId: id });
+    if (!result) {
+      console.warn('User not found for deletion:', id);
+    }
   } catch (error) {
-    console.log('Error deleting user:', error);
+    console.error('Error in deleteUser:', error);
+    throw error;
   }
-};
+}

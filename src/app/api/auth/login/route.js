@@ -15,6 +15,10 @@ export async function POST(req) {
     console.log('Email:', email);
     console.log('Password:', password);
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is missing from environment variables');
+    }
+
     // Check if the user already exists
     const userExists = await User.findOne({ email });
 
@@ -28,14 +32,14 @@ export async function POST(req) {
         const token = jwt.sign(
           { id: userExists._id, email: userExists.email },
           process.env.JWT_SECRET,
-          { expiresIn: process.env.JWT_expiresIn }
+          { expiresIn: process.env.JWT_expiresIn || '7d' } // Default to 7 days if undefined
         );
 
         // Set the token in an HttpOnly cookie
         const cookie = serialize('token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          maxAge: 60 * 60 * 24 * 7,
+          maxAge: 60 * 60 * 24 * 7, // 7 days
           path: '/',
           sameSite: 'strict',
         });
@@ -46,10 +50,16 @@ export async function POST(req) {
 
         return new Response(
           JSON.stringify({
-            message: "User signed in successfully",
-            user: userData // Include the user data without password
+            message: 'User signed in successfully',
+            user: userData,
           }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Set-Cookie': cookie, // Attach the cookie
+            },
+          }
         );
       } else {
         return new Response(
@@ -75,14 +85,14 @@ export async function POST(req) {
       const token = jwt.sign(
         { id: newUser._id, email: newUser.email },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_expiresIn }
+        { expiresIn: process.env.JWT_expiresIn || '7d' } // Default to 7 days if undefined
       );
 
       // Set the token in an HttpOnly cookie
       const cookie = serialize('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/',
         sameSite: 'strict',
       });
@@ -94,9 +104,15 @@ export async function POST(req) {
       return new Response(
         JSON.stringify({
           message: 'User created successfully',
-          user: userData // Include the user data without password
+          user: userData,
         }),
-        { status: 201, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 201,
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': cookie, // Attach the cookie
+          },
+        }
       );
     }
   } catch (error) {
