@@ -42,8 +42,9 @@ export const deleteUser = async (id) => {
     if (!result) {
       console.warn('User not found for deletion:', id);
     }
+    return result;
   } catch (error) {
     console.error('Error in deleteUser:', error);
     throw error;
   }
-}
+};

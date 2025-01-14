@@ -5,6 +5,7 @@ import Footer from "./component/Footer";
 import { ThemeProvider } from "next-themes";
 import ThemeCom from "./component/ThemeCom";
 import { ClerkProvider } from "@clerk/nextjs";
+import StoreProvider from "./StoreProvider";
 
 
 const geistSans = Geist({
@@ -30,7 +31,8 @@ export default function RootLayout({ children }) {
 
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           {/* Use PersistGate only on the client-side */}
-          
+          <StoreProvider>
+
               <ThemeProvider>
                 <ThemeCom>
                   <Header />
@@ -38,6 +40,8 @@ export default function RootLayout({ children }) {
                   <Footer />
                 </ThemeCom>
               </ThemeProvider>
+          </StoreProvider>
+          
            
         </body>
       </html>

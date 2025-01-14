@@ -5,8 +5,9 @@ import { FiEdit } from "react-icons/fi";
 import AdSpaceContainer from "@/app/component/AdSense";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
-import axios from "axios";
-import { uploadImage } from "@/app/api/cloudinary/cloudinary";
+import { useSelector,useDispatch } from "react-redux";
+import { setUser, clearUser } from '../../../lib/slices/userSlice';
+import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({
@@ -20,8 +21,13 @@ const SignInPage = () => {
 
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const dispatch = useDispatch();
+  const {currentUser} = useSelector((state) => state.user);
 
   useEffect(() => {
+    if (currentUser !== null) {
+      router.push("/");
+    }
     toast.warning("An error occurred in Clerk. Please try this auth page.");
   }, []);
 
@@ -87,13 +93,15 @@ const SignInPage = () => {
   
       if (response.ok) {
         const { user } = await response.json();
-        router.push("/"); // Redirect on successful login
+        dispatch(setUser(user));
+        router.push("/"); 
         toast.success(`Welcome back, ${user.firstName}!`);
       } else {
         toast.error("Invalid email or password. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error);
+      dispatch(clearUser());
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
