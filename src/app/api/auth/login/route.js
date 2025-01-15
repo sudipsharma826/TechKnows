@@ -10,9 +10,9 @@ export async function POST(req) {
 
     const { email, password, profilePic } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password ) {
       return new Response(
-        JSON.stringify({ error: 'Email and password are required' }),
+        JSON.stringify({ error: 'Email, password, displayName, and providerId are required' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -70,10 +70,14 @@ export async function POST(req) {
     } else {
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Create new user with all the required fields
       const newUser = await User.create({
         email,
         password: hashedPassword,
         profilePicture: profilePic,
+        displayName:email,
+        providerId:"viaPassword",
+        phoneNumber:"",
       });
 
       const token = jwt.sign(

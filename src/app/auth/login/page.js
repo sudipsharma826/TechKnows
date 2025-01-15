@@ -1,13 +1,15 @@
-"use client";
+'use client';
+
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import { useState, useEffect, useRef } from "react";
 import { FiEdit } from "react-icons/fi";
 import AdSpaceContainer from "@/app/component/AdSense";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // For navigation
 import { Toaster, toast } from "sonner";
-import { useSelector,useDispatch } from "react-redux";
-import { setUser, clearUser } from '../../../lib/slices/userSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { setUser, clearUser } from "../../../lib/slices/userSlice";
 import { uploadImage } from "@/app/config/cloudinary/cloudinary";
+import OAuth from "../../component/GoogleOAuth";
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({
@@ -22,19 +24,17 @@ const SignInPage = () => {
   const router = useRouter();
   const fileInputRef = useRef(null);
   const dispatch = useDispatch();
-  const {currentUser} = useSelector((state) => state.user);
+  const currentUser = useSelector((state) => state.user?.currentUser);
 
   useEffect(() => {
-    if (currentUser !== null) {
-      router.push("/");
+    if (currentUser) {
+      router.push("/"); // Redirect to home if the user is already logged in
     }
-    toast.warning("An error occurred in Clerk. Please try this auth page.");
-  }, []);
+  }, [currentUser, router]);
 
   const handleChange = (e) => {
     const { id, value, files } = e.target;
-
-    if (id === "profilePic") {
+    if (id === "profilePic" && files) {
       const file = files[0];
       if (file) {
         const validTypes = ["image/png", "image/jpeg"];
@@ -53,49 +53,39 @@ const SignInPage = () => {
     }
   };
 
-  const handleEditClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!formData.email || !formData.password) {
       setErrorMessage("Please fill all the fields");
       setShowError(true);
       return;
     }
-  
+
     try {
       setLoading(true);
-  
+
       let profilePicURL = "";
-  
-      // Upload the profile picture to Cloudinary
-      console.log(formData.profilePic);
+
       if (formData.profilePic) {
-       profilePicURL =await uploadImage(formData.profilePic);
-       console.log(profilePicURL);
+        profilePicURL = await uploadImage(formData.profilePic); // Upload the profile picture
       }
-  
-      // Send the form data (with Cloudinary URL) to the server
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          profilePic: profilePicURL, // Send the Cloudinary URL to the server
+          profilePic: profilePicURL,
         }),
       });
-  
+
       if (response.ok) {
         const { user } = await response.json();
-        dispatch(setUser(user));
-        router.push("/"); 
-        toast.success(`Welcome back, ${user.firstName}!`);
+        dispatch(setUser(user)); // Save user details to Redux
+        router.push("/");
+        toast.success(`Welcome, ${user.firstName}!`);
       } else {
         toast.error("Invalid email or password. Please try again.");
       }
@@ -108,7 +98,11 @@ const SignInPage = () => {
     }
   };
 
-
+  const handleEditClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20">
@@ -125,9 +119,9 @@ const SignInPage = () => {
                   </div>
                   <p className="text-xl font-semibold mb-4">Welcome Back!</p>
                   <p className="text-gray-100 mb-8">
-                    "Technology is best when it brings people together. Join
-                    our community of tech enthusiasts and share your knowledge
-                    with the world."
+                    "Technology is best when it brings people together. Join our
+                    community of tech enthusiasts and share your knowledge with
+                    the world."
                   </p>
                 </div>
                 <div className="text-center">
@@ -140,29 +134,44 @@ const SignInPage = () => {
               <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
                 Sign in to your account
               </h2>
+
+              {/* Display profile picture or OAuth buttons based on user authentication */}
+              {currentUser ? (
+                <div className="flex items-center justify-center mb-6">
+                  <img
+                    src={currentUser.profilePic || "/default-avatar.png"}
+                    alt="User Avatar"
+                    className="w-24 h-24 rounded-full border-2 border-gray-300 dark:border-gray-600 object-cover"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <OAuth />
+                </div>
+              )}
+
+              <div className="relative flex justify-center text-sm mt-4">
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 mb-7">
+                  Or continue with
+                </span>
+              </div>
               <form
                 className="space-y-6"
                 onSubmit={handleSubmit}
                 encType="multipart/form-data"
               >
                 <div>
-                  <Label
-                    className="text-gray-700 dark:text-gray-200"
-                    value="Email address"
-                  />
+                  <Label className="text-gray-700 dark:text-gray-200" value="Email address" />
                   <TextInput
                     type="email"
                     id="email"
-                    placeholder="info@sudipsharma.com.np"
+                    placeholder="info@example.com"
                     onChange={handleChange}
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label
-                    className="text-gray-700 dark:text-gray-200"
-                    value="Password"
-                  />
+                  <Label className="text-gray-700 dark:text-gray-200" value="Password" />
                   <TextInput
                     type="password"
                     id="password"

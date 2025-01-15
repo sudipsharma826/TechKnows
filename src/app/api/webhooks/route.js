@@ -63,6 +63,7 @@ export async function POST(req) {
 
       console.log('User successfully created or updated:', user);
     }
+    
 
     if (eventType === 'user.deleted') {
       const { id } = evt?.data;
