@@ -7,7 +7,6 @@ import ThemeCom from "./component/ThemeCom";
 import { ClerkProvider } from "@clerk/nextjs";
 import StoreProvider from "./StoreProvider";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,19 +29,16 @@ export default function RootLayout({ children }) {
         </head>
 
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          {/* Use PersistGate only on the client-side */}
+          {/* Wrap your app in the StoreProvider and ThemeProvider for state and theming */}
           <StoreProvider>
-
-              <ThemeProvider>
-                <ThemeCom>
-                  <Header />
-                  {children}
-                  <Footer />
-                </ThemeCom>
-              </ThemeProvider>
+            <ThemeProvider>
+              <ThemeCom>
+                <Header />
+                {children}
+                <Footer />
+              </ThemeCom>
+            </ThemeProvider>
           </StoreProvider>
-          
-           
         </body>
       </html>
     </ClerkProvider>

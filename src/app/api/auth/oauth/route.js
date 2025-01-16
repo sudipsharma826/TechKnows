@@ -1,6 +1,7 @@
 import User from '@/lib/models/userModel'; // Your User model
 import connect from '@/lib/mongodb/mongoose'; // MongoDB connection
-import { serialize } from 'cookie'; // For setting JWT cookies
+import { serialize } from 'cookie'; // For setting cookies
+import jwt from 'jsonwebtoken'; // For generating JWT
 
 export async function POST(req) {
   try {
@@ -27,7 +28,23 @@ export async function POST(req) {
         await existingUser.save();
       }
 
-      // Return the existing user data, excluding the password
+      // Create a JWT token
+      const token = jwt.sign(
+        { userId: existingUser._id, name: existingUser.displayName, role: existingUser.role },
+        process.env.JWT_SECRET, // Set your secret key in the environment variables
+        { expiresIn: '1h' } // Token expiration time (optional)
+      );
+
+      // Set the token in a cookie
+      const serialized = serialize('acesstoken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: 3600, // 1 hour
+        path: '/',
+      });
+
+      // Return the existing user data with the token
       const userData = { ...existingUser.toObject(), password: undefined };
 
       return new Response(
@@ -37,7 +54,10 @@ export async function POST(req) {
         }),
         {
           status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': serialized,
+          },
         }
       );
     } else {
@@ -47,10 +67,27 @@ export async function POST(req) {
         displayName,
         profilePicture: photoURL,
         providerId,
-        phoneNumber: phoneNumber || '', 
+        phoneNumber: phoneNumber || '',
+        isActive: true,
       });
 
-      // Return the newly created user data, excluding the password
+      // Create a JWT token for the new user
+      const token = jwt.sign(
+        { userId: newUser._id, name: newUser.displayName, role: newUser.role },
+        process.env.JWT_SECRET, // Set your secret key in the environment variables
+        { expiresIn: '1h' } // Token expiration time (optional)
+      );
+
+      // Set the token in a cookie
+      const serialized = serialize('acesstoken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: 3600, // 1 hour
+        path: '/',
+      });
+
+      // Return the newly created user data with the token
       const userData = { ...newUser.toObject(), password: undefined };
 
       return new Response(
@@ -60,7 +97,10 @@ export async function POST(req) {
         }),
         {
           status: 201,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': serialized,
+          },
         }
       );
     }

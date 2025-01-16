@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
   },
+  isActive: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);

@@ -135,20 +135,13 @@ const SignInPage = () => {
                 Sign in to your account
               </h2>
 
-              {/* Display profile picture or OAuth buttons based on user authentication */}
-              {currentUser ? (
-                <div className="flex items-center justify-center mb-6">
-                  <img
-                    src={currentUser.profilePic || "/default-avatar.png"}
-                    alt="User Avatar"
-                    className="w-24 h-24 rounded-full border-2 border-gray-300 dark:border-gray-600 object-cover"
-                  />
-                </div>
-              ) : (
-                <div>
+            
+              
+            
+               
                   <OAuth />
-                </div>
-              )}
+             
+              
 
               <div className="relative flex justify-center text-sm mt-4">
                 <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 mb-7">

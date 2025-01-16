@@ -41,10 +41,12 @@ export async function POST(req) {
       const token = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: process.env.JWT_EXPIRES_IN  }
       );
+      user.isActive = true;
+      await user.save(); 
 
-      const cookie = serialize('token', token, {
+      const cookie = serialize('acesstoken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 60 * 60 * 24 * 7,
@@ -78,15 +80,16 @@ export async function POST(req) {
         displayName:email,
         providerId:"viaPassword",
         phoneNumber:"",
+        isActive:true,
       });
 
       const token = jwt.sign(
         { id: newUser._id, email: newUser.email },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: process.env.JWT_EXPIRES_IN  }
       );
 
-      const cookie = serialize('token', token, {
+      const cookie = serialize('acesstoken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 60 * 60 * 24 * 7,

@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-// This will store the connection state
 const connection = {};
 
 // Function to connect to the MongoDB database
@@ -8,24 +7,24 @@ async function connect() {
   // Check if the connection object is already set to 'true' (i.e., connected)
   if (connection.isconnected) {
     console.log('Already connected');
-    return;
+    return mongoose.connections[0]; // Return the already connected mongoose connection
   }
 
   try {
     // Connect to MongoDB
-    const db = await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(process.env.MONGODB_URI, {
       
     });
 
     // Set the connection state to true when the connection is successful
-    connection.isconnected = db.connections[0].readyState === 1; // 1 means connected
+    connection.isconnected = mongoose.connections[0].readyState === 1; // 1 means connected
 
     console.log('Connected to the database');
+    return mongoose.connections[0]; // Return the actual connection
   } catch (error) {
     console.error('Error connecting to database: ', error);
-    process.exit(1); // Exit the process on failure
+    process.exit(1);
   }
 }
 
-// Export the function directly
 export default connect;

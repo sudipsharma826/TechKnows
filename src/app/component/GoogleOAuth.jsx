@@ -39,8 +39,10 @@ const OAuth = () => {
     }
 
     setLoading(true);
-    setAuthMessage('Please wait...');
+    setAuthMessage('Please wait... We are logging you in!');
     setIsAuthInProgress(true);
+
+    toast.loading('Please wait... Logging you in!', { id: 'auth' }); // Show a toast for the wait time
 
     try {
       const result = await signInWithPopup(auth, provider);
@@ -72,24 +74,15 @@ const OAuth = () => {
       dispatch(clearUser());
     } finally {
       setLoading(false);
+      toast.dismiss('auth'); // Dismiss the loading toast once done
     }
   };
 
   return (
     <div className="flex flex-col space-y-2 max-w-xs mx-auto">
       <Toaster richColors position="top-center" />
-      {authMessage && (
-        <div className="text-center text-sm font-semibold text-gray-700 dark:text-white mb-2">
-          {authMessage}
-        </div>
-      )}
-
-      {/* Show message and disable buttons while authentication is in progress */}
-      {isAuthInProgress ? (
-        <div className="text-center text-sm font-semibold text-gray-700 dark:text-white mb-2">
-          {authMessage}
-        </div>
-      ) : (
+      
+      
         <>
           {/* Google Login */}
           <button
@@ -98,7 +91,9 @@ const OAuth = () => {
             disabled={loading}
           >
             <AiFillGoogleCircle className="w-6 h-6 text-red-500" />
-            <span className="ml-3 text-sm font-semibold">Sign in with Google</span>
+            <span className="ml-3 text-sm font-semibold">
+              Sign in with Google
+            </span>
           </button>
 
           {/* GitHub Login */}
@@ -108,10 +103,11 @@ const OAuth = () => {
             disabled={loading}
           >
             <FaGithub className="w-6 h-6 text-gray-800 dark:text-white" />
-            <span className="ml-3 text-sm font-semibold">Sign in with GitHub</span>
+            <span className="ml-3 text-sm font-semibold">
+              Sign in with GitHub
+            </span>
           </button>
         </>
-      )}
     </div>
   );
 };
