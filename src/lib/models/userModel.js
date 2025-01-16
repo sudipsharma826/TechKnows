@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   },
   profilePicture: {
     type: String,
-    required: false,  // Profile picture is optional
+    required: false,  
   },
   providerId: {
     type: String,

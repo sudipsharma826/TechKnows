@@ -8,7 +8,7 @@ import { useTheme } from 'next-themes'
 import { FiSearch, FiSun, FiMoon, FiMenu, FiEdit } from 'react-icons/fi'
 import { useSelector, useDispatch } from 'react-redux'
 import { clearUser } from '../../lib/slices/userSlice' // Adjust path as necessary
-import { toast ,Toaster} from 'sonner' // Assuming you are using react-toastify for notifications
+import { toast, Toaster } from 'sonner' // Assuming you are using sonner for notifications
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
@@ -52,7 +52,7 @@ export default function Header() {
   }
 
   const handleSignOut = async () => {
-    const userId = currentUser._id;
+    const userId = currentUser._id
     console.log('userId from frontend ', userId)
     setLoading(true)
     try {
@@ -278,6 +278,24 @@ export default function Header() {
           </div>
         </div>
 
+        {/* Mobile Search Bar */}
+
+        {isSearchVisible && (
+          <div className="md:hidden w-full mt-2">
+            <form onSubmit={handleSubmit}>
+              <div className="relative w-full">
+                <TextInput
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                  icon={FiSearch}
+                />
+              </div>
+            </form>
+          </div>
+        )}
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden flex flex-col mt-4 space-y-4">
