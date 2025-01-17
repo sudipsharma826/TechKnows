@@ -5,6 +5,12 @@ import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 
 export async function POST(req) {
+  useEffect(() => {
+    // Check if redirected
+    if (router.query.redirected) {
+      toast.info("To access this route, you must log in first.");
+    }
+  }, [router.query]);
   try {
     await connect();
 
@@ -39,7 +45,7 @@ export async function POST(req) {
       }
 
       const token = jwt.sign(
-        { id: user._id, email: user.email },
+        { id: user._id, email: user.email ,role:user.role},
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN  }
       );
@@ -84,7 +90,7 @@ export async function POST(req) {
       });
 
       const token = jwt.sign(
-        { id: newUser._id, email: newUser.email },
+        { id: newUser._id, email: newUser.email ,role:newUser.role},
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN  }
       );

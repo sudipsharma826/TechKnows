@@ -1,46 +1,53 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Header from "./component/Header";
 import Footer from "./component/Footer";
 import { ThemeProvider } from "next-themes";
 import ThemeCom from "./component/ThemeCom";
-import { ClerkProvider } from "@clerk/nextjs";
 import StoreProvider from "./StoreProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// Define metadata for the app
+export const metadata = {
+  title: "Sudip Sharma Blog",
+  description: "Sudip Sharma Blog",
+  icons: {
+    icon: "/images/site_logo.png", // Ensure this is in the `public/images/` folder
+  },
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Configure the Roboto font
+const roboto = Roboto({
+  weight: ["400",  "700",], // Include desired weights
   subsets: ["latin"],
+  variable: "--font-roboto",
 });
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    
       <html lang="en" suppressHydrationWarning>
-        <head>
-          <title>Sudip Sharma Blog</title>
-          <meta name="description" content="Sudip Sharma Blog" />
-          <link rel="icon" href="images/site_logo.png" />
-          <script async src={process.env.NEXT_PUBLIC_ADSENSE_SRC}></script>
-        </head>
-
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          {/* Wrap your app in the StoreProvider and ThemeProvider for state and theming */}
+        <body className={`${roboto.variable} antialiased`}>
+          {/* StoreProvider for app-wide state management */}
           <StoreProvider>
+            {/* ThemeProvider for dark/light mode */}
             <ThemeProvider>
               <ThemeCom>
+                {/* App Header */}
                 <Header />
+                {/* Main App Content */}
                 {children}
+                {/* App Footer */}
                 <Footer />
               </ThemeCom>
             </ThemeProvider>
           </StoreProvider>
+
+          {/* Load external scripts */}
+          {process.env.NEXT_PUBLIC_ADSENSE_SRC && (
+            <script async src={process.env.NEXT_PUBLIC_ADSENSE_SRC}></script>
+          )}
         </body>
       </html>
-    </ClerkProvider>
+    
   );
 }

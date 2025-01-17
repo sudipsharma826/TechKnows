@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation"; // Updated import
 import { useSelector } from "react-redux";
 import { DashSideBar } from "../../component/DashSidebar";
 import AdminRequestForm from "../adminrequest/page";
+import { Requests } from "../requests/page";
 
 export default function Dashboard() {
   const searchParams = useSearchParams(); // Use for query parameters
@@ -25,9 +26,10 @@ export default function Dashboard() {
         {/* Sidebar remains static */}
         <DashSideBar />
       </div>
-      <div className="w-full p-6">
+      <div className="w-full p-6 ml-2">
         {/* Dynamically render the page based on the current 'tab' query */}
-        {currentUser.role !== "admin" && tab === "adminrequest" && <AdminRequestForm />}
+        {tab === "adminrequest" && <AdminRequestForm />}
+        {tab === "requests" && <Requests />}
 
       </div>
     </div>

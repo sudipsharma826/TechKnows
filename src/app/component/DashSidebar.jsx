@@ -3,15 +3,16 @@
 import { Sidebar } from 'flowbite-react';
 import { HiAcademicCap,  HiInbox } from 'react-icons/hi';
 import Link from 'next/link';
+import { FiEdit } from 'react-icons/fi';
 
 export function DashSideBar() {
   return (
     <Sidebar aria-label="Sidebar with logo branding example">
       {/* Sidebar Logo */}
       <Sidebar.Logo>
-        <div className="px-4 py-2 flex items-center">
-          <HiAcademicCap className="h-6 w-6 text-purple-600" />
-          <span className="ml-2 font-bold text-lg">TechKnows</span>
+        <div className="px-4 py-2 flex items-center mt-10">
+          <FiEdit className="h-6 w-6 text-blue-600" />
+          <span className="ml-2 font-bold text-lg text-blue-600">TechKnows</span>
         </div>
       </Sidebar.Logo>
       
