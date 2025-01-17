@@ -5,12 +5,7 @@ import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 
 export async function POST(req) {
-  useEffect(() => {
-    // Check if redirected
-    if (router.query.redirected) {
-      toast.info("To access this route, you must log in first.");
-    }
-  }, [router.query]);
+  
   try {
     await connect();
 

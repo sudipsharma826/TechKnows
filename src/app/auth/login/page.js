@@ -12,6 +12,12 @@ import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import OAuth from "../../component/GoogleOAuth";
 
 const SignInPage = () => {
+  useEffect(() => {
+    // Check if redirected
+    if (router.query.redirected) {
+      toast.info("To access this route, you must log in first.");
+    }
+  }, [router.query]);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
