@@ -12,12 +12,15 @@ import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import OAuth from "../../component/GoogleOAuth";
 
 const SignInPage = () => {
+  const router = useRouter(); // Move this to the top
+
   useEffect(() => {
     // Check if redirected
-    if (router.query.redirected) {
+    if (router.query) {
       toast.info("To access this route, you must log in first.");
     }
-  }, [router.query]);
+  }, [router.query]); // Now this works since router is initialized
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -27,7 +30,6 @@ const SignInPage = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const router = useRouter();
   const fileInputRef = useRef(null);
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.user?.currentUser);
@@ -90,7 +92,7 @@ const SignInPage = () => {
       if (response.ok) {
         const { user } = await response.json();
         dispatch(setUser(user)); // Save user details to Redux
-        router.push("/");
+        router.push("/"); // Redirect after successful login
         toast.success(`Welcome, ${user.firstName}!`);
       } else {
         toast.error("Invalid email or password. Please try again.");
@@ -141,13 +143,7 @@ const SignInPage = () => {
                 Sign in to your account
               </h2>
 
-            
-              
-            
-               
-                  <OAuth />
-             
-              
+              <OAuth />
 
               <div className="relative flex justify-center text-sm mt-4">
                 <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 mb-7">

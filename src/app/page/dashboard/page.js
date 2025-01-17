@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"; // Updated import
 import { useSelector } from "react-redux";
 import { DashSideBar } from "../../component/DashSidebar";
 import AdminRequestForm from "../adminrequest/page";
-import { Requests } from "../requests/page";
+import {Requests } from "../requests/page";
 
 export default function Dashboard() {
   const searchParams = useSearchParams(); // Use for query parameters

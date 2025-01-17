@@ -40,7 +40,7 @@ export default function AdminRequestForm() {
         });
 
         // Use router.push() to navigate without a page refresh
-        router.push('/dashboard?tab=request'); // Navigate to dashboard without refresh
+        router.push('/page/dashboard'); // Navigate to dashboard without refresh
       } else {
         toast.error('Failed to send request. Please try again.', {
           duration: 5000,

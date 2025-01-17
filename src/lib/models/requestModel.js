@@ -8,7 +8,7 @@ const requestSchema = new mongoose.Schema(
     },
     requestType: {
       type: String,
-      enum: ["Admin"],
+      enum: ["Admin","Delete Comment"],
       required: true,
     },
     description: {
