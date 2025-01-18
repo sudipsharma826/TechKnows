@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import { Button, TextInput, Card, Label, FileInput, Checkbox } from "flowbite-react";
 import dynamic from "next/dynamic";
@@ -28,11 +27,23 @@ export default function CreatePost() {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState(categories);
   const [content, setContent] = useState("");
   const [featured, setFeatured] = useState(false);
   const [premium, setPremium] = useState(false);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+
+  const handleCategorySearch = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setCategorySearch(searchValue);
+    setFilteredCategories(
+      categories.filter((category) =>
+        category.toLowerCase().includes(searchValue)
+      )
+    );
+  };
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prev) =>
@@ -45,10 +56,10 @@ export default function CreatePost() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     try {
-      fileChecker(file); // Validate file
-      setImage(file); // Update image state
+      fileChecker(file);
+      setImage(file);
     } catch (error) {
-      toast.error(error.message); // Show error to the user
+      toast.error(error.message);
     }
   };
 
@@ -60,10 +71,9 @@ export default function CreatePost() {
       let imageUrl = "";
 
       if (image) {
-        imageUrl = await uploadImage(image); // Upload image to Cloudinary
+        imageUrl = await uploadImage(image);
       }
 
-      // Prepare payload
       const payload = {
         userRole: currentUser.role,
         createdBy: currentUser._id,
@@ -75,9 +85,7 @@ export default function CreatePost() {
         premium,
         imageUrl,
       };
-      console.log(payload);
 
-      // API call
       const response = await fetch("/api/post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,14 +94,13 @@ export default function CreatePost() {
 
       if (response.ok) {
         toast.success("Post created successfully!");
-        // Reset form after successful submission
         setTitle("");
         setSubtitle("");
         setSelectedCategories([]);
         setContent("");
         setFeatured(false);
         setPremium(false);
-        setImage(null); // Clear the image file input
+        setImage(null);
       } else {
         toast.error("Failed to create post. Please try again.");
       }
@@ -107,7 +114,7 @@ export default function CreatePost() {
 
   return (
     <>
-      <Card className="max-w-3xl mx-auto p-6 space-y-6 mt-10">
+      <Card className="max-w-3xl mx-auto p-6 space-y-6">
         <h2 className="text-2xl font-bold mb-4">Create Post</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -132,9 +139,15 @@ export default function CreatePost() {
           </div>
 
           <div>
-            <Label value="Categories" />
+            <Label value="Search Categories" />
+            <TextInput
+              placeholder="Search categories..."
+              value={categorySearch}
+              onChange={handleCategorySearch}
+            />
+            <Label value="Categories" className="mt-2" />
             <div className="flex flex-wrap gap-2 mt-2">
-              {categories.map((category) => (
+              {filteredCategories.map((category) => (
                 <Button
                   key={category}
                   type="button"
@@ -173,23 +186,19 @@ export default function CreatePost() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="featured"
-                checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-              />
-              <Label htmlFor="featured">Featured Post</Label>
-            </div>
+            <Checkbox
+              id="featured"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+            />
+            <Label htmlFor="featured">Featured Post</Label>
 
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="premium"
-                checked={premium}
-                onChange={(e) => setPremium(e.target.checked)}
-              />
-              <Label htmlFor="premium">Premium Post</Label>
-            </div>
+            <Checkbox
+              id="premium"
+              checked={premium}
+              onChange={(e) => setPremium(e.target.checked)}
+            />
+            <Label htmlFor="premium">Premium Post</Label>
           </div>
 
           <div>

@@ -81,7 +81,7 @@ export function Requests() {
   }
 
   return (
-    <div className="overflow-x-auto mt-9 ml-1">
+    <div className="overflow-x-auto md:mt-10">
       {/* Loading or Error handling messages */}
       {loading && (
         <div className="flex justify-center items-center">
