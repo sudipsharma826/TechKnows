@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Button, TextInput, Card, Label, FileInput, Checkbox } from "flowbite-react";
 import dynamic from "next/dynamic";
