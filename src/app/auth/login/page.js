@@ -4,22 +4,24 @@ import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import { useState, useEffect, useRef } from "react";
 import { FiEdit } from "react-icons/fi";
 import AdSpaceContainer from "@/app/component/AdSense";
-import { useRouter } from "next/navigation"; // For navigation
+import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { useSelector, useDispatch } from "react-redux";
 import { setUser, clearUser } from "../../../lib/slices/userSlice";
 import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import OAuth from "../../component/GoogleOAuth";
+import { fileChecker } from "../../component/FileChecker";
+
+
 
 const SignInPage = () => {
-  const router = useRouter(); // Move this to the top
+  const router = useRouter();
 
   useEffect(() => {
-    // Check if redirected
     if (router.query) {
       toast.info("To access this route, you must log in first.");
     }
-  }, [router.query]); // Now this works since router is initialized
+  }, [router.query]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -42,18 +44,10 @@ const SignInPage = () => {
 
   const handleChange = (e) => {
     const { id, value, files } = e.target;
+
     if (id === "profilePic" && files) {
       const file = files[0];
-      if (file) {
-        const validTypes = ["image/png", "image/jpeg"];
-        if (!validTypes.includes(file.type)) {
-          toast.error("Only .png or .jpg files are allowed.");
-          return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error("File size must be less than 5 MB.");
-          return;
-        }
+      if (file && fileChecker(file)) {
         setFormData({ ...formData, profilePic: file });
       }
     } else {

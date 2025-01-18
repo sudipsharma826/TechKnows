@@ -3,12 +3,13 @@ import User from "../../../../lib/models/userModel"; // User model
 import Request from "../../../../lib/models/requestModel"; // Request model
 import mongoose from "mongoose";
 
-// Dynamic Admin Schema
+// Dynamic Admin Schema with posts field
 const adminSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true },
   isActive: { type: Boolean, default: true },
+  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }], // Include posts field
 });
 
 // Helper function to get or create the dynamic model
@@ -16,10 +17,11 @@ function getAdminModel(collectionName) {
   if (mongoose.models[collectionName]) {
     return mongoose.models[collectionName]; // Use the existing model
   }
-  return mongoose.model(collectionName, adminSchema); // Create a new model
+  return mongoose.model(collectionName, adminSchema, collectionName); // Create a new model
 }
 
-export async function POST(req, res) {
+// POST request to approve or reject the admin request
+export async function POST(req) {
   try {
     const { userId, requestType, description } = await req.json();
 
@@ -62,8 +64,9 @@ export async function POST(req, res) {
   }
 }
 
-export async function PUT(req, res) {
-  const { requestId, action } = await req.json();
+// PUT request to handle admin actions (approve, reject, enable, disable)
+export async function PUT(req) {
+  const { requestId, action, postId } = await req.json();
 
   if (!requestId || !action) {
     return new Response(
@@ -103,12 +106,21 @@ export async function PUT(req, res) {
         request.status = "approved";
         await request.save();
 
-        // Add the user as an admin
-        await AdminModel.create({
-          name: user.displayName,
-          email: user.email,
-          userId: user._id,
-        });
+        // Check if the admin document exists
+        let adminDoc = await AdminModel.findOne({ userId: user._id });
+        if (!adminDoc) {
+          // Create the admin document if it doesn't exist
+          adminDoc = new AdminModel({
+            name: user.displayName,
+            email: user.email,
+            userId: user._id,
+            posts: [], // Initialize with an empty array for posts
+          });
+          await adminDoc.save();
+        }
+
+        // Update the user role
+        await User.findByIdAndUpdate(user._id, { role: "admin" });
 
         return new Response(
           JSON.stringify({ message: "Request approved." }),
@@ -126,7 +138,7 @@ export async function PUT(req, res) {
 
       case "enable":
         // Enable the admin
-        await AdminModel.updateMany({}, { isActive: true });
+        await AdminModel.updateOne({ userId: user._id }, { isActive: true });
         return new Response(
           JSON.stringify({ message: "Admin enabled." }),
           { status: 200, headers: { "Content-Type": "application/json" } }
@@ -134,9 +146,28 @@ export async function PUT(req, res) {
 
       case "disable":
         // Disable the admin
-        await AdminModel.updateMany({}, { isActive: false });
+        await AdminModel.updateOne({ userId: user._id }, { isActive: false });
         return new Response(
           JSON.stringify({ message: "Admin disabled." }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+
+      case "addPost":
+        if (!postId) {
+          return new Response(
+            JSON.stringify({ error: "postId is required for adding a post" }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        // Add the post ID to the admin's posts array
+        await AdminModel.updateOne(
+          { userId: user._id },
+          { $addToSet: { posts: postId } } // Use $addToSet to avoid duplicates
+        );
+
+        return new Response(
+          JSON.stringify({ message: "Post added successfully to admin posts." }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
 

@@ -8,7 +8,7 @@ import AdSpaceContainer from '@/app/component/AdSense';
 import { useRouter } from 'next/navigation';
 
 export default function AdminRequestForm() {
-  const { currentUser } = useSelector((state) => state.user);
+  const currentUser = useSelector((state) => state.user.currentUser || {});
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -74,11 +74,11 @@ export default function AdminRequestForm() {
               className="h-8 w-8 object-cover rounded-full"
             />
           ) : (
-            <span className="text-white text-lg">{currentUser.displayName[0]}</span>
+            <span className="text-white text-lg">{currentUser?.displayName[0]}</span>
           )}
           <div>
-            <h2 className="text-xl font-semibold">{currentUser.displayName}</h2>
-            <p className="text-sm text-gray-500">ID: {currentUser._id}</p>
+            <h2 className="text-xl font-semibold">{currentUser?.displayName}</h2>
+            <p className="text-sm text-gray-500">ID: {currentUser?._id}</p>
           </div>
         </div>
 

@@ -34,3 +34,5 @@ body {
 .focus-visible:focus {
   @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
 }
+
+/* Add this to your global CSS (globals.css or similar) */

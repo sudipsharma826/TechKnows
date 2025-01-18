@@ -63,17 +63,17 @@ export default function Header() {
         },
         body: JSON.stringify({ userId }),
       })
-
+  
       if (!response.ok) {
         throw new Error('Failed to log out')
       }
-
+  
       // Dispatch Redux action to clear user data
-      dispatch(clearUser())
-
+      dispatch(clearUser()) // Ensure that this clears the currentUser state in Redux
+  
       // Show success toast message
       toast.success('Logged out successfully!')
-
+  
       // Redirect to the homepage
       router.push('/')
     } catch (error) {
@@ -82,6 +82,7 @@ export default function Header() {
       setLoading(false)
     }
   }
+  
 
   return (
     <nav

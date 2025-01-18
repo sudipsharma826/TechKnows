@@ -28,19 +28,19 @@ export async function POST(req) {
         await existingUser.save();
       }
 
-      // Create a JWT token
+      // Create a JWT token with expiration from the environment variable
       const token = jwt.sign(
         { userId: existingUser._id, name: existingUser.displayName, role: existingUser.role },
-        process.env.JWT_SECRET, // Set your secret key in the environment variables
-        { expiresIn: '1h' } // Token expiration time (optional)
+        process.env.JWT_SECRET, 
+        { expiresIn: process.env.JWT_EXPIRES_IN } 
       );
 
       // Set the token in a cookie
       const serialized = serialize('acesstoken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production', 
         sameSite: 'Strict',
-        maxAge: 3600, // 1 hour
+        maxAge: 60 * 60 * 24 * 7, 
         path: '/',
       });
 
@@ -71,19 +71,19 @@ export async function POST(req) {
         isActive: true,
       });
 
-      // Create a JWT token for the new user
+      // Create a JWT token for the new user with expiration from the environment variable
       const token = jwt.sign(
         { userId: newUser._id, name: newUser.displayName, role: newUser.role },
         process.env.JWT_SECRET, // Set your secret key in the environment variables
-        { expiresIn: '1h' } // Token expiration time (optional)
+        { expiresIn: process.env.JWT_EXPIRES_IN} 
       );
 
       // Set the token in a cookie
       const serialized = serialize('acesstoken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production', 
         sameSite: 'Strict',
-        maxAge: 3600, // 1 hour
+        maxAge: 60 * 60 * 24 * 7, 
         path: '/',
       });
 

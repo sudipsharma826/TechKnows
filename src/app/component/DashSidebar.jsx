@@ -1,13 +1,13 @@
 'use client';
 
 import { Sidebar } from 'flowbite-react';
-import { HiAcademicCap, HiInbox } from 'react-icons/hi';
+import { HiAcademicCap, HiInbox, HiPencil, HiPencilAlt } from 'react-icons/hi';
 import Link from 'next/link';
 import { FiEdit } from 'react-icons/fi';
 import { useSelector } from 'react-redux';
 
 export function DashSideBar() {
-  const { currentUser } = useSelector((state) => state.user);
+  const currentUser = useSelector((state) => state.user?.currentUser || {});
 
   return (
     <Sidebar aria-label="Sidebar with logo branding example">
@@ -22,17 +22,32 @@ export function DashSideBar() {
         <Sidebar.ItemGroup>
           {/* Superadmin Sidebar Item */}
           {currentUser?.role === 'superadmin' && (
+            <>
             <Link href="/page/dashboard?tab=requests" passHref>
               <Sidebar.Item icon={HiInbox}>Requests</Sidebar.Item>
             </Link>
+            </>
           )}
 
           {/* Admin and User Sidebar Item */}
-          {['admin', 'user'].includes(currentUser?.role) && (
+          {['user'].includes(currentUser?.role) && (
+            <>
             <Link href="/page/dashboard?tab=adminrequest" passHref>
               <Sidebar.Item icon={HiAcademicCap}>Request Admin</Sidebar.Item>
             </Link>
+            
+          </>
           )}
+
+          {/* Superadmin and Admin Sidebar  */}
+          {['superadmin', 'admin'].includes(currentUser?.role) && (
+            <>
+            <Link href="/page/dashboard?tab=createpost" passHref>
+              <Sidebar.Item icon={HiPencilAlt}>Create Post</Sidebar.Item>
+            </Link>
+            </>
+          )}
+          
         </Sidebar.ItemGroup>
       </Sidebar.Items>
     </Sidebar>

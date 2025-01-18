@@ -5,10 +5,13 @@ import { useSelector } from "react-redux";
 import { DashSideBar } from "../../component/DashSidebar";
 import AdminRequestForm from "../adminrequest/page";
 import {Requests } from "../requests/page";
+import CreatePost from "../post/create/page";
 
 export default function Dashboard() {
   const searchParams = useSearchParams(); // Use for query parameters
-  const { currentUser } = useSelector((state) => state.user);
+  const currentUser = useSelector((state) => state.user?.currentUser || {});
+
+
   const [tab, setTab] = useState(""); // Track the current tab
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export default function Dashboard() {
         {/* Dynamically render the page based on the current 'tab' query */}
         {tab === "adminrequest" && <AdminRequestForm />}
         {tab === "requests" && <Requests />}
+        {tab === "createpost" && <CreatePost />}
 
       </div>
     </div>

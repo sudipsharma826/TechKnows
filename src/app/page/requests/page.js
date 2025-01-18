@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import { Table, Button, Spinner } from "flowbite-react";
-import { useSelector } from "react-redux"; // Assuming you are using Redux for user roles
+import { useSelector } from "react-redux";
 import { HiClock, HiDocumentRemove, HiOutlineCheck } from "react-icons/hi";
-import { toast } from "sonner"; // Assuming you are using toast notifications
+import { toast } from "sonner";
 
 export function Requests() {
   const [requests, setRequests] = useState([]); // To store fetched requests data
-  const [loading, setLoading] = useState(true); // For loading state
+  const [loading, setLoading] = useState(true); // For page loading state
   const [error, setError] = useState(null); // For error handling
-  const [actionLoading, setActionLoading] = useState(false); // For request action state
+  const [actionLoading, setActionLoading] = useState(null); // For specific request action state (request ID)
+  const [refreshKey, setRefreshKey] = useState(0); // Parameter to trigger re-fetch
 
-  // Assuming role is stored in Redux (e.g., 'user', 'admin', 'superadmin')
-  const role = useSelector((state) => state.user.currentUser.role);
+  const currentUser = useSelector((state) => state.user?.currentUser || {});
 
-  // Fetch requests on component mount
+  // Fetch requests on component mount and whenever refreshKey changes
   useEffect(() => {
     async function fetchRequests() {
       try {
@@ -27,11 +27,7 @@ export function Requests() {
 
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data.requests)) {
-            setRequests(data.requests);
-          } else {
-            throw new Error("Invalid data format from API.");
-          }
+          setRequests(data.requests || []);
         } else {
           throw new Error(`Failed to fetch requests: ${response.statusText}`);
         }
@@ -44,12 +40,12 @@ export function Requests() {
     }
 
     fetchRequests();
-  }, []);
+  }, [refreshKey]); // Re-fetch when refreshKey changes
 
-  // Handle Approve, Reject, Disable, or Toggle actions
+  // Handle Approve, Reject, Enable, or Disable actions
   async function handleRequestAction(requestId, action) {
     try {
-      setActionLoading(true);
+      setActionLoading(requestId); // Indicate loading for the specific request
       const response = await fetch("/api/request/adminrequest", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -58,11 +54,19 @@ export function Requests() {
 
       if (response.ok) {
         const updatedRequest = await response.json();
+
+        // Optionally update the local state
         setRequests((prevRequests) =>
           prevRequests.map((req) =>
-            req._id === updatedRequest._id ? updatedRequest : req
+            req._id === updatedRequest._id
+              ? { ...req, ...updatedRequest } // Merge updated data
+              : req
           )
         );
+
+        // Refresh the data by updating the refreshKey
+        setRefreshKey((prevKey) => prevKey + 1);
+
         toast.success(`Request ${action}ed successfully.`);
       } else {
         const errorData = await response.json();
@@ -72,7 +76,7 @@ export function Requests() {
       toast.error(err.message || "An error occurred while updating the request.");
       console.error(err);
     } finally {
-      setActionLoading(false);
+      setActionLoading(null); // Reset loading state
     }
   }
 
@@ -95,7 +99,7 @@ export function Requests() {
             <Table.HeadCell>Request Type</Table.HeadCell>
             <Table.HeadCell>Requested By</Table.HeadCell>
             <Table.HeadCell>Status</Table.HeadCell>
-            {role === "superadmin" && <Table.HeadCell>Actions</Table.HeadCell>}
+            {currentUser.role === "superadmin" && <Table.HeadCell>Actions</Table.HeadCell>}
           </Table.Head>
           <Table.Body className="divide-y">
             {requests.map((request) => (
@@ -118,7 +122,7 @@ export function Requests() {
                     <HiClock className="h-6 w-6 text-yellow-500" />
                   )}
                 </Table.Cell>
-                {role === "superadmin" && (
+                {currentUser.role === "superadmin" && (
                   <Table.Cell>
                     <div className="flex gap-2">
                       {request.status === "pending" && (
@@ -129,9 +133,13 @@ export function Requests() {
                             onClick={() =>
                               handleRequestAction(request._id, "approved")
                             }
-                            disabled={actionLoading}
+                            disabled={actionLoading === request._id}
                           >
-                            Approve
+                            {actionLoading === request._id ? (
+                              <Spinner size="xs" />
+                            ) : (
+                              "Approve"
+                            )}
                           </Button>
                           <Button
                             color="failure"
@@ -139,36 +147,50 @@ export function Requests() {
                             onClick={() =>
                               handleRequestAction(request._id, "rejected")
                             }
-                            disabled={actionLoading}
+                            disabled={actionLoading === request._id}
                           >
-                            Reject
+                            {actionLoading === request._id ? (
+                              <Spinner size="xs" />
+                            ) : (
+                              "Reject"
+                            )}
                           </Button>
                         </>
                       )}
-                      {request.status === "approved" && request.admin.isActive === true && (
-                        <Button
-                          color="warning"
-                          size="xs"
-                          onClick={() =>
-                            handleRequestAction(request._id, "disable")
-                          }
-                          disabled={actionLoading}
-                        >
-                          Disable
-                        </Button>
-                      )}
-                      {request.status === "approved" && request.admin.isActive === false && (
-                        <Button
-                          color="success"
-                          size="xs"
-                          onClick={() =>
-                            handleRequestAction(request._id, "enable")
-                          }
-                          disabled={actionLoading}
-                        >
-                          Enable
-                        </Button>
-                      )}
+                      {request.status === "approved" &&
+                        request.admin.isActive && (
+                          <Button
+                            color="warning"
+                            size="xs"
+                            onClick={() =>
+                              handleRequestAction(request._id, "disable")
+                            }
+                            disabled={actionLoading === request._id}
+                          >
+                            {actionLoading === request._id ? (
+                              <Spinner size="xs" />
+                            ) : (
+                              "Disable"
+                            )}
+                          </Button>
+                        )}
+                      {request.status === "approved" &&
+                        !request.admin.isActive && (
+                          <Button
+                            color="success"
+                            size="xs"
+                            onClick={() =>
+                              handleRequestAction(request._id, "enable")
+                            }
+                            disabled={actionLoading === request._id}
+                          >
+                            {actionLoading === request._id ? (
+                              <Spinner size="xs" />
+                            ) : (
+                              "Enable"
+                            )}
+                          </Button>
+                        )}
                     </div>
                   </Table.Cell>
                 )}
