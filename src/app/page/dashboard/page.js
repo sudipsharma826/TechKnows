@@ -29,7 +29,7 @@ export default function Dashboard() {
         {/* Sidebar remains static */}
         <DashSideBar />
       </div>
-      <div className="w-full p-6 ml-2">
+      <div className="w-full p-6 ml-2 md:-mt-10 sm:mt-0">
         {/* Dynamically render the page based on the current 'tab' query */}
         {tab === "adminrequest" && <AdminRequestForm />}
         {tab === "requests" && <Requests />}

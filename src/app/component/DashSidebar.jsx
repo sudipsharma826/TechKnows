@@ -10,7 +10,7 @@ export function DashSideBar() {
   const currentUser = useSelector((state) => state.user?.currentUser || {});
 
   return (
-    <Sidebar aria-label="Sidebar with logo branding example">
+    <Sidebar aria-label="Sidebar with logo branding example" className='w-full md:w-56'>
       {/* Sidebar Logo */}
       <div className="px-4 py-2 flex items-center mt-10">
         <FiEdit className="h-6 w-6 text-blue-600" />
@@ -19,7 +19,7 @@ export function DashSideBar() {
 
       {/* Sidebar Items */}
       <Sidebar.Items>
-        <Sidebar.ItemGroup>
+        <Sidebar.ItemGroup className='flex flex-col gap-1'>
           {/* Superadmin Sidebar Item */}
           {currentUser?.role === 'superadmin' && (
             <>

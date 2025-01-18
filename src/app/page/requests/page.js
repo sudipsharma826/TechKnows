@@ -163,7 +163,7 @@ export function Requests() {
                             color="warning"
                             size="xs"
                             onClick={() =>
-                              handleRequestAction(request._id, "disable")
+                              handleRequestAction(request._id, "disabled")
                             }
                             disabled={actionLoading === request._id}
                           >
@@ -180,7 +180,7 @@ export function Requests() {
                             color="success"
                             size="xs"
                             onClick={() =>
-                              handleRequestAction(request._id, "enable")
+                              handleRequestAction(request._id, "enabled")
                             }
                             disabled={actionLoading === request._id}
                           >

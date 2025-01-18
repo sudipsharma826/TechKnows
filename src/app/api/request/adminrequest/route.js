@@ -22,7 +22,7 @@ function getAdminModel(collectionName) {
 
 // PUT request to handle admin actions (approve, reject, enable, disable)
 export async function PUT(req) {
-  const { requestId, action, postId } = await req.json();
+  const { requestId, action } = await req.json();
 
   if (!requestId || !action) {
     return new Response(
@@ -92,7 +92,21 @@ export async function PUT(req) {
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
 
-      // Other actions like "enable", "disable" can be handled here
+      case "enabled":
+        // Update the admin document
+        await AdminModel.updateOne({ userId: user._id }, { isActive: true });
+        return new Response(
+          JSON.stringify({ message: "Admin enabled." }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      case "disabled":
+        // Update the admin document
+        await AdminModel.updateOne({ userId: user._id }, { isActive: false });
+        return new Response(
+          JSON.stringify({ message: "Admin disabled." }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+
 
       default:
         return new Response(

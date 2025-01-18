@@ -15,8 +15,8 @@
 }
 
 body {
-  /* color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb)); */
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
 }
 
 /* Custom styles for Navbar */
@@ -35,4 +35,7 @@ body {
   @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
 }
 
-/* Add this to your global CSS (globals.css or similar) */
+/* Global animation styles for smoother transitions */
+div {
+  transition: all 0.3s ease-in-out;
+}
