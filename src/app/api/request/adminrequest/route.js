@@ -20,50 +20,6 @@ function getAdminModel(collectionName) {
   return mongoose.model(collectionName, adminSchema, collectionName); // Create a new model
 }
 
-// POST request to approve or reject the admin request
-export async function POST(req) {
-  try {
-    const { userId, requestType, description } = await req.json();
-
-    if (!userId || !requestType || !description) {
-      return new Response(
-        JSON.stringify({
-          error: "userId, requestType, and description are required",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Connect to the database
-    await connect();
-
-    // Create the new request entry using the Request model
-    const newRequest = new Request({
-      requestedDate: new Date(),
-      requestedBy: userId,
-      requestType,
-      description,
-      status: "pending",
-      checkedBy: null,
-      checkedDate: null,
-    });
-
-    // Save the new request to the database
-    await newRequest.save();
-
-    return new Response(
-      JSON.stringify({ message: "Request submitted successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    console.error("Error during request submission:", error);
-    return new Response(
-      JSON.stringify({ error: "Error during request submission" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-}
-
 // PUT request to handle admin actions (approve, reject, enable, disable)
 export async function PUT(req) {
   const { requestId, action, postId } = await req.json();
@@ -136,40 +92,7 @@ export async function PUT(req) {
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
 
-      case "enable":
-        // Enable the admin
-        await AdminModel.updateOne({ userId: user._id }, { isActive: true });
-        return new Response(
-          JSON.stringify({ message: "Admin enabled." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-
-      case "disable":
-        // Disable the admin
-        await AdminModel.updateOne({ userId: user._id }, { isActive: false });
-        return new Response(
-          JSON.stringify({ message: "Admin disabled." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-
-      case "addPost":
-        if (!postId) {
-          return new Response(
-            JSON.stringify({ error: "postId is required for adding a post" }),
-            { status: 400, headers: { "Content-Type": "application/json" } }
-          );
-        }
-
-        // Add the post ID to the admin's posts array
-        await AdminModel.updateOne(
-          { userId: user._id },
-          { $addToSet: { posts: postId } } // Use $addToSet to avoid duplicates
-        );
-
-        return new Response(
-          JSON.stringify({ message: "Post added successfully to admin posts." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+      // Other actions like "enable", "disable" can be handled here
 
       default:
         return new Response(
@@ -185,3 +108,49 @@ export async function PUT(req) {
     );
   }
 }
+
+
+// POST request to approve or reject the admin request
+export async function POST(req) {
+  try {
+    const { userId, requestType, description } = await req.json();
+
+    if (!userId || !requestType || !description) {
+      return new Response(
+        JSON.stringify({
+          error: "userId, requestType, and description are required",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Connect to the database
+    await connect();
+
+    // Create the new request entry using the Request model
+    const newRequest = new Request({
+      requestedDate: new Date(),
+      requestedBy: userId,
+      requestType,
+      description,
+      status: "pending",
+      checkedBy: null,
+      checkedDate: null,
+    });
+
+    // Save the new request to the database
+    await newRequest.save();
+
+    return new Response(
+      JSON.stringify({ message: "Request submitted successfully" }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Error during request submission:", error);
+    return new Response(
+      JSON.stringify({ error: "Error during request submission" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+

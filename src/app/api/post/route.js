@@ -1,9 +1,11 @@
+import User from '@/lib/models/userModel';
 import Post from '../../../lib/models/postModel';
 import connect from '../../../lib/mongodb/mongoose';
 import mongoose from 'mongoose';
 
 export async function POST(req) {
     try {
+        // Connect to the database
         await connect();
 
         const { 
@@ -38,45 +40,33 @@ export async function POST(req) {
             createdBy,
         });
 
-        // Save post to the database
+        // Save the new post to the database
         await newPost.save();
 
         // If the user is not a superadmin, handle admin-specific logic
         if (userRole !== 'superadmin') {
-            const adminCollectionName = `admin_${createdBy}s`;
+            const adminCollectionName = `admin_${createdBy}`;
             console.log("Admin Collection Name:", adminCollectionName);
 
-            // Define admin schema
-            const adminSchema = new mongoose.Schema({
-                userId: String,
-                posts: [mongoose.Schema.Types.ObjectId],
-            });
+            // Retrieve the dynamically created admin model
+            const adminModel = mongoose.models[adminCollectionName] || mongoose.model(adminCollectionName, new mongoose.Schema({
+                userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+                name: { type: String, required: true },
+                email: { type: String, required: true },
+                posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+                isActive: { type: Boolean, default: true },
+            }), adminCollectionName);
 
-            // Check if the model is already registered
-            const adminModel = mongoose.models[adminCollectionName] 
-                ? mongoose.model(adminCollectionName) 
-                : mongoose.model(adminCollectionName, adminSchema, adminCollectionName);
+            // Add the post ID to the admin's posts array
+            await adminModel.updateOne(
+                { userId: new mongoose.Types.ObjectId(createdBy) },
+                { $push: { posts: newPost._id } } // Add the post ID to the posts array
+            );
 
-            // Check if the admin document exists
-            const adminDoc = await adminModel.findOne({ userId: createdBy });
-
-            if (!adminDoc) {
-                // Create the admin document if it doesn't exist
-                await adminModel.create({
-                    userId: createdBy,
-                    posts: [newPost._id],
-                });
-                console.log(`Admin document created in collection: ${adminCollectionName}`);
-            } else {
-                // Add the post ID to the admin's posts array
-                await adminModel.updateOne(
-                    { userId: createdBy }, // Find the document by userId
-                    { $push: { posts: newPost._id } } // Push the new post ID into the posts array
-                );
-                console.log(`Post ID added to admin collection: ${adminCollectionName}`);
-            }
+            console.log("Post added to admin's posts successfully.");
         }
 
+        // Return success response
         return new Response(
             JSON.stringify({ message: 'Post created successfully' }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
