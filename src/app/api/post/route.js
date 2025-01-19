@@ -155,7 +155,6 @@ export async function GET(req) {
     }
 }
 
-// DELETE a post with userID and postID, handling superadmin/admin roles
 export async function DELETE(req) {
     const { userID, postID } = await req.json();
 
@@ -178,8 +177,6 @@ export async function DELETE(req) {
         }
 
         const { role } = user;
-
-        // Fetch the post to check if the user is the creator
         const post = await Post.findById(postID);
         if (!post) {
             return new Response(
@@ -188,49 +185,36 @@ export async function DELETE(req) {
             );
         }
 
-        // Check if the user is the creator for non-admin roles
-        if (role !== 'admin' && post.createdBy !== userID) {
-            return new Response(
-                JSON.stringify({ error: 'You are not the author of this post' }),
-                { status: 403, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-
-        // Handle superadmin role deletion
+        // Role-based deletion logic
         if (role === 'superadmin') {
+            // Superadmin can delete any post
             await Post.findByIdAndDelete(postID);
             return new Response(
                 JSON.stringify({ message: 'Post deleted successfully (Superadmin)' }),
                 { status: 200, headers: { 'Content-Type': 'application/json' } }
             );
-        }
-
-        // Handle admin role deletion
-        if (role === 'admin') {
+        } else if (role === 'admin') {
+            // Admin can delete any post
             await Post.findByIdAndDelete(postID);
-            const adminCollectionName = `admin_${userID}`;
-            let adminModel = mongoose.models[adminCollectionName];
-            if (!adminModel) {
-                const adminSchema = new mongoose.Schema({
-                    userId: mongoose.Types.ObjectId,
-                    posts: [mongoose.Types.ObjectId],
-                });
-                adminModel = mongoose.model(adminCollectionName, adminSchema);
-            }
-
-            // Update admin model by removing the post reference
-            await adminModel.updateOne(
-                { userId: new mongoose.Types.ObjectId(userID) },
-                { $pull: { posts: new mongoose.Types.ObjectId(postID) } }
-            );
-
             return new Response(
                 JSON.stringify({ message: 'Post deleted successfully (Admin)' }),
                 { status: 200, headers: { 'Content-Type': 'application/json' } }
             );
+        } else if (role === 'user') {
+            // Users can only delete their own posts
+            if (post.createdBy.toString() !== userID) {
+                return new Response(
+                    JSON.stringify({ error: 'You are not the author of this post' }),
+                    { status: 403, headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+            await Post.findByIdAndDelete(postID);
+            return new Response(
+                JSON.stringify({ message: 'Post deleted successfully (User)' }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
+            );
         }
 
-        // Unauthorized role
         return new Response(
             JSON.stringify({ error: 'Unauthorized role for this operation' }),
             { status: 403, headers: { 'Content-Type': 'application/json' } }
@@ -244,7 +228,6 @@ export async function DELETE(req) {
     }
 }
 
-// Get a post by ID
 export async function PATCH(req) {
     const { postId, userRole, userId } = await req.json();
 
@@ -258,16 +241,14 @@ export async function PATCH(req) {
     await connect();
 
     try {
-        // Check if the user role is correct with the user ID
-        const getUser = await User.findOne({ _id: userId, role: userRole });
-        if (!getUser) {
+        const user = await User.findById(userId);
+        if (!user || user.role !== userRole) {
             return new Response(
-                JSON.stringify({ error: 'User ID or role is incorrect' }),
+                JSON.stringify({ error: 'User not found or role mismatch' }),
                 { status: 404, headers: { 'Content-Type': 'application/json' } }
             );
         }
 
-        // Fetch the post and check if the user is the creator
         const post = await Post.findById(postId);
         if (!post) {
             return new Response(
@@ -276,15 +257,15 @@ export async function PATCH(req) {
             );
         }
 
-        // Check if the user is the creator of the post
-        if (post.createdBy.toString() !== userId || userRole == 'superadmin') {
+        // Check role and access permissions
+        if (userRole === 'user' && post.createdBy.toString() !== userId) {
             return new Response(
                 JSON.stringify({ error: 'You are not the author of this post' }),
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
             );
         }
 
-        // Return the post for editing
+        // Return the post
         return new Response(JSON.stringify(post), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
@@ -298,7 +279,6 @@ export async function PATCH(req) {
     }
 }
 
-// Update a post by ID
 export async function PUT(req) {
     const { postId, userId, userRole, payload } = await req.json();
 
@@ -312,16 +292,14 @@ export async function PUT(req) {
     await connect();
 
     try {
-        // Check if the user role is correct with the user ID
-        const getUser = await User.findOne({ _id: userId, role: userRole });
-        if (!getUser) {
+        const user = await User.findById(userId);
+        if (!user || user.role !== userRole) {
             return new Response(
-                JSON.stringify({ error: 'User ID or role is incorrect' }),
+                JSON.stringify({ error: 'User not found or role mismatch' }),
                 { status: 404, headers: { 'Content-Type': 'application/json' } }
             );
         }
 
-        // Fetch the post to check if the user is the creator
         const post = await Post.findById(postId);
         if (!post) {
             return new Response(
@@ -330,15 +308,14 @@ export async function PUT(req) {
             );
         }
 
-        // Ensure the user is the creator of the post
-        if (post.createdBy.toString() !== userId || userRole == 'superadmin') {
+        // Ensure only the author can update their own posts (except superadmin/admin)
+        if (userRole === 'user' && post.createdBy.toString() !== userId) {
             return new Response(
                 JSON.stringify({ error: 'You are not the author of this post' }),
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
             );
         }
 
-        // Proceed with updating the post
         const updatedPost = await Post.findByIdAndUpdate(postId, payload, { new: true });
         if (!updatedPost) {
             return new Response(
