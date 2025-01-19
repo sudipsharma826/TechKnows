@@ -17,11 +17,7 @@ const nextConfig = {
             destination: '/page/dashboard?tab=requests',
             permanent: true, // Set to true for 301 redirect or false for 302 redirect
           },
-          {
-            source: '/page/post/update',
-            destination: '/page/dashboard?tab=updatepost',
-            permanent: true, // Set to true for 301 redirect or false for 302 redirect
-          },
+          
       ];
     },
   };

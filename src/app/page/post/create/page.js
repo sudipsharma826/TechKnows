@@ -33,6 +33,7 @@ export default function CreatePost() {
   const [featured, setFeatured] = useState(false);
   const [premium, setPremium] = useState(false);
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);  // For image preview
   const [loading, setLoading] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
 
@@ -59,6 +60,13 @@ export default function CreatePost() {
     try {
       fileChecker(file);
       setImage(file);
+
+      // Preview image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       toast.error(error.message);
     }
@@ -82,8 +90,8 @@ export default function CreatePost() {
         subtitle,
         categories: selectedCategories,
         content,
-        featured,
-        premium,
+        isFeatured: featured,
+        isPremium: premium,
         imageUrl,
       };
 
@@ -102,6 +110,7 @@ export default function CreatePost() {
         setFeatured(false);
         setPremium(false);
         setImage(null);
+        setImagePreview(null);
       } else {
         toast.error("Failed to create post. Please try again.");
       }
@@ -209,6 +218,12 @@ export default function CreatePost() {
               onChange={handleImageChange}
               helperText="PNG, JPG, JPEG (Max: 5MB)"
             />
+            {/* Display Image Preview */}
+            {imagePreview && (
+              <div className="mt-4">
+                <img src={imagePreview} alt="Image Preview" className="w-full h-auto rounded" />
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-4">

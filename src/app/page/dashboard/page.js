@@ -8,7 +8,8 @@ import { Requests } from "../requests/page";
 import CreatePost from "../post/create/page";
 import { toast, Toaster } from "sonner";
 import { HiMenu, HiX } from "react-icons/hi";
-import UpdatePost from "../post/update/page";
+import UpdatePost from "../post/update/[postId]/page";
+import GetPost from "../post/get/page";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -34,23 +35,16 @@ export default function Dashboard() {
 
       {/* Mobile Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-screen w-64 bg-gray-800 text-white z-50 transition-transform transform ${
+        className={`fixed top-14 left-0 h-screen w-64 bg-gray-800 text-white z-50 transition-transform transform  ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:hidden`}
       >
-        <button
-          className="absolute top-4 right-4 text-xl text-white p-2 hover:bg-gray-700 rounded-full"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close Sidebar"
-        >
-          <HiX />
-        </button>
         <DashSideBar />
       </div>
 
       {/* Toggle Button for Mobile */}
       <button
-        className={`fixed top-4 left-4 z-50 text-xl p-2 rounded-full shadow-md transition-colors ${
+        className={`fixed top-10 left-4 z-50 text-xl p-2 rounded-full shadow-md transition-colors ${
           isSidebarOpen ? "bg-blue-500 text-white" : "bg-gray-800 text-white"
         } md:hidden`}
         onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -60,7 +54,7 @@ export default function Dashboard() {
       </button>
 
       {/* Static Sidebar for Desktop */}
-      <div className="hidden md:block md:w-56 bg-gray-800 text-white">
+      <div className="hidden md:block md:w-56 bg-gray-800 text-white ">
         <DashSideBar />
       </div>
 
@@ -70,6 +64,8 @@ export default function Dashboard() {
         {tab === "requests" && <Requests />}
         {tab === "createpost" && <CreatePost />}
         {tab=== "updatepost" && <UpdatePost />}
+        {tab === "getpost" && <GetPost />}
+        {tab === "updatepost/:id" && <UpdatePost />}
         {!tab && (
           <div className="text-center">
             <h1 className="text-2xl font-semibold">
