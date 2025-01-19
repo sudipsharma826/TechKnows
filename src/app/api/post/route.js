@@ -277,7 +277,7 @@ export async function PATCH(req) {
         }
 
         // Check if the user is the creator of the post
-        if (post.createdBy.toString() !== userId) {
+        if (post.createdBy.toString() !== userId || userRole == 'superadmin') {
             return new Response(
                 JSON.stringify({ error: 'You are not the author of this post' }),
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
@@ -331,7 +331,7 @@ export async function PUT(req) {
         }
 
         // Ensure the user is the creator of the post
-        if (post.createdBy.toString() !== userId) {
+        if (post.createdBy.toString() !== userId || userRole == 'superadmin') {
             return new Response(
                 JSON.stringify({ error: 'You are not the author of this post' }),
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
