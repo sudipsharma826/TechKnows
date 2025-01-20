@@ -89,7 +89,7 @@ const SignInPage = () => {
         router.push("/"); // Redirect after successful login
         toast.success(`Welcome, ${user.firstName}!`);
       } else {
-        toast.error("Invalid email or password. Please try again.");
+        toast.error("An error occurred. Please try again."+response.error);
       }
     } catch (error) {
       console.error("Error:", error);
