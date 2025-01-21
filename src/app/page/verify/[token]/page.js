@@ -28,7 +28,7 @@ const VerifyPage = (params) => {
       if (response.ok) {
         setMessage(data.message);
         toast.success(data.message);
-        setTimeout(() => router.push('/login'), 3000); // Redirect to login after success
+        setTimeout(() => router.push('/auth/login'), 3000); 
       } else {
         setMessage(data.error);
         toast.error(data.error);

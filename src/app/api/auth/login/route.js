@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 import sendMail from '../../../config/nodeMailer';
+import { AiOutlineConsoleSql } from 'react-icons/ai';
 
 export async function POST(req) {
   try {
@@ -86,10 +87,13 @@ async function sendVerificationEmail(user) {
   const token = jwt.sign(
     { userID: user._id, userEmail: user.email, otp, eotp: user.otpExpiresAt },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: JWT_EXPIRES_IN }
   );
+ const DOMAIN = process.env.DOMAIN;
+ const verificationLink = `https://${DOMAIN}/page/verify/${encodeURIComponent(token)}`;
 
-  const verificationLink = `https://${process.env.DOMAIN}/verify?token=${encodeURIComponent(token)}`;
+  console.log(verificationLink);
+
   await sendMail({
     email: user.email,
     subject: 'Verify Your Email – Sudip Sharma Blog',
