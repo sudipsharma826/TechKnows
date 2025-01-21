@@ -1,22 +1,22 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 
-const VerifyPage = () => {
+const VerifyPage = ({ params }) => {
   const router = useRouter();
-  const { token } = router.query; // Access the `token` from the URL
+  const { token } = params; // Access the `token` from the URL
+  console.log("Token:", token);
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!router.isReady) return; // Wait until the router is ready
     if (token) {
       verifyAccount(token);
     }
-  }, [router.isReady, token]);
+  }, [token]);
 
   const verifyAccount = async (verificationToken) => {
     try {
@@ -25,15 +25,16 @@ const VerifyPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ verificationToken }),
       });
+
       const data = await response.json();
 
       if (response.ok) {
         setMessage(data.message);
         toast.success(data.message); // Show success notification
-        setTimeout(() => router.push("/auth/login"), 3000); // Redirect to login
+       router.push("/auth/login");// Redirect to login
       } else {
-        setMessage(data.error);
-        toast.error(data.error); // Show error notification
+        setMessage(data.error || "Failed to verify your account.");
+        toast.error(data.error || "Failed to verify your account.");
       }
     } catch (error) {
       console.error("Verification error:", error);
@@ -46,10 +47,9 @@ const VerifyPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Toaster />
       <div className="p-6 bg-white shadow-lg rounded-lg text-center">
         {loading ? (
-          <p>Verifying your account...</p>
+          <p>Verifying account...</p>
         ) : (
           <p>{message}</p>
         )}

@@ -129,7 +129,11 @@ function generateAndSetToken(user) {
   const userData = { ...user.toObject(), password: undefined };
 
   return new Response(
-    JSON.stringify({ message: 'User signed in successfully.', user: userData, type: 'success' }),
+    JSON.stringify({ 
+      message: `Welcome ${userData.displayName}!`, 
+      user: userData, 
+      type: 'success' 
+    }),
     {
       status: 200,
       headers: {
@@ -157,6 +161,7 @@ export async function PUT(req) {
 
     // Verify the JWT
     const { userID, userEmail, otp, eotp } = jwt.verify(verificationToken, process.env.JWT_SECRET);
+    console.log('userID:', userID , 'userEmail:', userEmail, 'otp:', otp, 'eotp:', eotp);
 
     if (!userID || !userEmail || !otp || !eotp) {
       return new Response(
@@ -185,9 +190,10 @@ export async function PUT(req) {
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
+  console.log("Incoming OTP:", otp);
+  console.log("User OTP:", userData.otp);
     // Check if the OTP matches
-    if (userData.otp !== otp) {
+    if (userData.otp != otp) {
       return new Response(
         JSON.stringify({ error: 'Invalid OTP.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }

@@ -12,8 +12,6 @@ import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import OAuth from "../../component/GoogleOAuth";
 import { fileChecker } from "../../component/FileChecker";
 
-
-
 const SignInPage = () => {
   const router = useRouter();
 
@@ -47,32 +45,36 @@ const SignInPage = () => {
 
     if (id === "profilePic" && files) {
       const file = files[0];
+      console.log("File:", file);
       if (file && fileChecker(file)) {
-        setFormData({ ...formData, profilePic: file });
+        setFormData((prev) => ({ ...prev, profilePic: file }));
+        console.log("File Data:", fileData);
+      } else {
+        toast.error("Invalid file type. Please upload a PNG or JPEG image.");
       }
     } else {
-      setFormData({ ...formData, [id]: value.trim() });
+      setFormData((prev) => ({ ...prev, [id]: value.trim() }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
-      toast.error('Please fill all the fields.');
+      toast.error("Please fill all the fields.");
       return;
     }
 
     try {
       setLoading(true);
 
-      let profilePicURL = '';
+      let profilePicURL = "";
       if (formData.profilePic) {
         profilePicURL = await uploadImage(formData.profilePic);
       }
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -84,14 +86,14 @@ const SignInPage = () => {
 
       if (response.ok) {
         dispatch(setUser(data.user));
-        router.push('/');
+        router.push("/");
         toast.success(data.message);
       } else {
-        toast[data.type || 'error'](data.message);
+        toast[data.type || "error"](data.message);
       }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('An error occurred. Please try again.');
+      console.error("Error:", error);
+      toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
