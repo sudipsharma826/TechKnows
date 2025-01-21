@@ -87,7 +87,7 @@ async function sendVerificationEmail(user) {
   const token = jwt.sign(
     { userID: user._id, userEmail: user.email, otp, eotp: user.otpExpiresAt },
     process.env.JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { expiresIn: process.env.JWT_EXPIRES_IN }
   );
  const DOMAIN = process.env.DOMAIN;
  const verificationLink = `https://${DOMAIN}/page/verify/${encodeURIComponent(token)}`;

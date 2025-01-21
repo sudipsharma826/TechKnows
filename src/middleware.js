@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers"; // To access cookies
-import jwt from 'jsonwebtoken'; // You may need to install this package (`npm install jsonwebtoken`)
-import { toast } from 'sonner'; // Ensure this package is installed to use toast notifications
+import { cookies } from "next/headers"; 
+import jwt from 'jsonwebtoken'; 
+import { toast } from 'sonner';
 
 export const config = {
   matcher: [
-    "/page/dashboard/:path*", // Apply middleware for dashboard and sub-paths
-    "/page/dashboard",        // Apply middleware for the main dashboard
-    "/auth/login",            // Handle redirection for logged-in users on login page
+    "/page/dashboard/:path*", 
+    "/page/dashboard",       
+    "/auth/login",          
   ],
 };
 
@@ -19,7 +19,7 @@ export async function middleware(req) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('acesstoken')?.value;
 
-  console.log("Access token:", accessToken); // Debugging access token
+  console.log("Access token:", accessToken); 
 
   let role = null;
   let isActive = null;
