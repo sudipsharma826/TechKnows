@@ -57,25 +57,22 @@ const SignInPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.email || !formData.password) {
-      setErrorMessage("Please fill all the fields");
-      setShowError(true);
+      toast.error('Please fill all the fields.');
       return;
     }
 
     try {
       setLoading(true);
 
-      let profilePicURL = "";
-
+      let profilePicURL = '';
       if (formData.profilePic) {
-        profilePicURL = await uploadImage(formData.profilePic); // Upload the profile picture
+        profilePicURL = await uploadImage(formData.profilePic);
       }
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -83,18 +80,18 @@ const SignInPage = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const { user } = await response.json();
-        dispatch(setUser(user)); // Save user details to Redux
-        router.push("/"); // Redirect after successful login
-        toast.success(`Welcome, ${user.firstName}!`);
+        dispatch(setUser(data.user));
+        router.push('/');
+        toast.success(data.message);
       } else {
-        toast.error("An error occurred. Please try again."+response.error);
+        toast[data.type || 'error'](data.message);
       }
     } catch (error) {
-      console.error("Error:", error);
-      dispatch(clearUser());
-      toast.error("An error occurred. Please try again.");
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
