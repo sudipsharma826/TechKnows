@@ -69,6 +69,7 @@ export async function POST(req) {
         providerId,
         phoneNumber: phoneNumber || '',
         isActive: true,
+        isEmailVerified: true,
       });
 
       // Create a JWT token for the new user with expiration from the environment variable
