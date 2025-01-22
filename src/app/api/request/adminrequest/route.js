@@ -92,23 +92,6 @@ export async function PUT(req) {
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
 
-      case "enabled":
-        // Update the admin document
-        await AdminModel.updateOne({ userId: user._id }, { isActive: true });
-        await User.findByIdAndUpdate(user._id, { isActive: true });
-        return new Response(
-          JSON.stringify({ message: "Admin enabled." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-      case "disabled":
-        // Update the admin document
-        await AdminModel.updateOne({ userId: user._id }, { isActive: false });
-        await User.findByIdAndUpdate(user._id, { isActive: false });
-        return new Response(
-          JSON.stringify({ message: "Admin disabled." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-
 
       default:
         return new Response(

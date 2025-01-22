@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { Table, Button, Spinner } from "flowbite-react";
@@ -42,14 +42,39 @@ export function Requests() {
     fetchRequests();
   }, [refreshKey]); // Re-fetch when refreshKey changes
 
-  // Handle Approve, Reject, Enable, or Disable actions
-  async function handleRequestAction(requestId, action) {
+  // Handle Approve, Reject, Enable, or Disable actions based on requestType
+  async function handleRequestAction(requestId, action, requestType) {
     try {
       setActionLoading(requestId); // Indicate loading for the specific request
-      const response = await fetch("/api/request/adminrequest", {
-        method: "PUT",
+
+      let apiUrl;
+      let method;
+      let body;
+      console.log("Request Type:", requestType);
+
+      // Dynamically select API based on requestType
+      switch (requestType) {
+        case "Admin":
+          apiUrl = "/api/request/adminrequest";
+          method = "PUT";
+          body = JSON.stringify({ requestId, action });
+          break;
+
+        case "Category":
+          apiUrl = "/api/request/categoryrequest";
+          method = "PUT";
+          body = JSON.stringify({ requestId, action });
+          break;
+
+        // Add additional cases for other request types
+        default:
+          throw new Error("Invalid request type");
+      }
+
+      const response = await fetch(apiUrl, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, action }),
+        body,
       });
 
       if (response.ok) {
@@ -89,7 +114,6 @@ export function Requests() {
           <span>Loading...</span>
         </div>
       )}
-      {error && <div className="text-red-500">{error}</div>}
 
       {/* Render data if requests are fetched */}
       {!loading && requests.length > 0 && (
@@ -131,7 +155,7 @@ export function Requests() {
                             color="success"
                             size="xs"
                             onClick={() =>
-                              handleRequestAction(request._id, "approved")
+                              handleRequestAction(request._id, "approved", request.requestType)
                             }
                             disabled={actionLoading === request._id}
                           >
@@ -145,7 +169,7 @@ export function Requests() {
                             color="failure"
                             size="xs"
                             onClick={() =>
-                              handleRequestAction(request._id, "rejected")
+                              handleRequestAction(request._id, "rejected", request.requestType)
                             }
                             disabled={actionLoading === request._id}
                           >
@@ -157,40 +181,7 @@ export function Requests() {
                           </Button>
                         </>
                       )}
-                      {request.status === "approved" &&
-                        request.admin.isActive && (
-                          <Button
-                            color="warning"
-                            size="xs"
-                            onClick={() =>
-                              handleRequestAction(request._id, "disabled")
-                            }
-                            disabled={actionLoading === request._id}
-                          >
-                            {actionLoading === request._id ? (
-                              <Spinner size="xs" />
-                            ) : (
-                              "Disable"
-                            )}
-                          </Button>
-                        )}
-                      {request.status === "approved" &&
-                        !request.admin.isActive && (
-                          <Button
-                            color="success"
-                            size="xs"
-                            onClick={() =>
-                              handleRequestAction(request._id, "enabled")
-                            }
-                            disabled={actionLoading === request._id}
-                          >
-                            {actionLoading === request._id ? (
-                              <Spinner size="xs" />
-                            ) : (
-                              "Enable"
-                            )}
-                          </Button>
-                        )}
+                      
                     </div>
                   </Table.Cell>
                 )}

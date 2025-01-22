@@ -30,7 +30,7 @@ export async function POST(req) {
 
       // Create a JWT token with expiration from the environment variable
       const token = jwt.sign(
-        { userId: existingUser._id, name: existingUser.displayName, role: existingUser.role },
+        { userId: existingUser._id, name: existingUser.displayName, role: existingUser.role ,isActive: existingUser.isActive},
         process.env.JWT_SECRET, 
         { expiresIn: process.env.JWT_EXPIRES_IN } 
       );
@@ -73,7 +73,7 @@ export async function POST(req) {
 
       // Create a JWT token for the new user with expiration from the environment variable
       const token = jwt.sign(
-        { userId: newUser._id, name: newUser.displayName, role: newUser.role },
+        { userId: newUser._id, name: newUser.displayName, role: newUser.role , isActive: newUser.isActive},
         process.env.JWT_SECRET, // Set your secret key in the environment variables
         { expiresIn: process.env.JWT_EXPIRES_IN} 
       );

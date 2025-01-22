@@ -5,12 +5,12 @@ const connection = {};
 // Function to connect to the MongoDB database
 async function connect() {
   // Check if the connection object is already set to 'true' (i.e., connected)
-  if (connection.isconnected) {
-    console.log('Already connected');
-    return mongoose.connections[0]; // Return the already connected mongoose connection
-  }
-
+  
   try {
+    if (connection.isconnected) {
+      console.log('Already connected');
+      return mongoose.connections[0]; // Return the already connected mongoose connection
+    }
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI, {
       
@@ -23,7 +23,6 @@ async function connect() {
     return mongoose.connections[0]; // Return the actual connection
   } catch (error) {
     console.error('Error connecting to database: ', error);
-    process.exit(1);
   }
 }
 

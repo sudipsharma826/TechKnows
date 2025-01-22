@@ -74,7 +74,7 @@ export default function AdminRequestForm() {
               className="h-8 w-8 object-cover rounded-full"
             />
           ) : (
-            <span className="text-white text-lg">{currentUser?.displayName[0]}</span>
+            <span className="text-white text-lg">{currentUser?.displayName}</span>
           )}
           <div>
             <h2 className="text-xl font-semibold">{currentUser?.displayName}</h2>

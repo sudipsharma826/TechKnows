@@ -10,6 +10,9 @@ import { toast, Toaster } from "sonner";
 import { HiMenu, HiX } from "react-icons/hi";
 import UpdatePost from "../post/update/[postId]/page";
 import GetPost from "../post/get/page";
+import RequestCategory from "../category/requestcategory/page";
+import CategoryForm from "../category/addcategory/page";
+import CategoryList from "../category/page";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -66,11 +69,11 @@ export default function Dashboard() {
         {tab=== "updatepost" && <UpdatePost />}
         {tab === "getpost" && <GetPost />}
         {tab === "updatepost/:id" && <UpdatePost />}
+        {tab === "addrequestcategory" && <RequestCategory />}
+        {tab === "addcategories" && <CategoryForm />}\
+        {tab === "categories" && <CategoryList />}
         {!tab && (
           <div className="text-center">
-            <h1 className="text-2xl font-semibold">
-              Welcome, {currentUser.displayName || "User"}!
-            </h1>
             <p className="mt-2">Select a tab from the sidebar to begin.</p>
           </div>
         )}

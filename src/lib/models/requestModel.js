@@ -8,7 +8,7 @@ const requestSchema = new mongoose.Schema(
     },
     requestType: {
       type: String,
-      enum: ["Admin","Delete Comment"],
+      enum: ["Admin", "Category"],
       required: true,
     },
     description: {
@@ -31,10 +31,23 @@ const requestSchema = new mongoose.Schema(
     checkedDate: {
       type: Date,
     },
+    // New Field
+    requestedFor: {
+      type: String,
+      validate: {
+        validator: function (value) {
+          // Ensure `requestedFor` is provided only for `Category` requestType
+          if (this.requestType === "Category" && !value) {
+            return false; // Invalid if `requestedFor` is missing for `Category`
+          }
+          return true;
+        },
+        message: "The 'requestedFor' field is required when 'requestType' is 'Category'.",
+      },
+    },
   },
   { timestamps: true }
 );
-
 
 const Request = mongoose.models.requests || mongoose.model("requests", requestSchema);
 

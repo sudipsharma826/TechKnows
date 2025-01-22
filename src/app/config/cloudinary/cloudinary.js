@@ -1,6 +1,4 @@
 import axios from "axios";
-import crypto from "crypto";
-
 // Upload the Image
 export const uploadImage = async (image) => {
     try {
