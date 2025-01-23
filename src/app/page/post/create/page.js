@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+import 
+{ useState, useEffect } from "react";
 import { Button, TextInput, Card, Label, FileInput, Checkbox } from "flowbite-react";
 import dynamic from "next/dynamic";
 import AdSpaceContainer from "@/app/component/AdSense";
