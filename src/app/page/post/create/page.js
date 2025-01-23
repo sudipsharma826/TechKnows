@@ -1,5 +1,4 @@
-"use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, TextInput, Card, Label, FileInput, Checkbox } from "flowbite-react";
 import dynamic from "next/dynamic";
 import AdSpaceContainer from "@/app/component/AdSense";
@@ -11,24 +10,13 @@ import { useSelector } from "react-redux";
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-const categories = [
-  "Technology",
-  "Design",
-  "Development",
-  "Business",
-  "Marketing",
-  "Lifestyle",
-  "Photography",
-  "Writing",
-];
-
 export default function CreatePost() {
   const currentUser = useSelector((state) => state.user?.currentUser || {});
 
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState(categories);
+  const [filteredCategories, setFilteredCategories] = useState([]); // Initialize as an empty array
   const [content, setContent] = useState("");
   const [featured, setFeatured] = useState(false);
   const [premium, setPremium] = useState(false);
@@ -37,24 +25,54 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
 
+  // Fetch categories from the backend on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=true&fetchType=categories
+`, {
+          method: "GET",
+        });
+        const data = await response.json();
+        console.log("Data from categories ",data)
+        if (response.ok) {
+          setFilteredCategories(data.categories); // Set categories from backend
+        } else {
+          toast.error("Failed to fetch categories.");
+        }
+      } catch (error) {
+        console.error("An error occurred:", error);
+        toast.error("An error occurred while fetching categories.");
+      }
+    };
+
+    if (currentUser._id) {
+      fetchCategories();
+    }
+  }, [currentUser._id, currentUser.role]);
+
+  // Handle search functionality for categories
   const handleCategorySearch = (e) => {
     const searchValue = e.target.value.toLowerCase();
     setCategorySearch(searchValue);
-    setFilteredCategories(
-      categories.filter((category) =>
-        category.toLowerCase().includes(searchValue)
+    // Filter categories based on search
+    setFilteredCategories((prevCategories) =>
+      prevCategories.filter((category) =>
+        category.name.toLowerCase().includes(searchValue) // Assuming categories have a `name` property
       )
     );
   };
 
+  // Handle category selection/deselection
   const handleCategoryChange = (category) => {
     setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
+      prev.includes(category._id)
+        ? prev.filter((c) => c !== category._id)
+        : [...prev, category._id]
     );
   };
 
+  // Handle image change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     try {
@@ -72,6 +90,7 @@ export default function CreatePost() {
     }
   };
 
+  // Handle post submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -159,13 +178,13 @@ export default function CreatePost() {
             <div className="flex flex-wrap gap-2 mt-2">
               {filteredCategories.map((category) => (
                 <Button
-                  key={category}
+                  key={category._id} // Assuming each category has a unique _id
                   type="button"
-                  color={selectedCategories.includes(category) ? "success" : "gray"}
+                  color={selectedCategories.includes(category._id) ? "success" : "gray"}
                   onClick={() => handleCategoryChange(category)}
                   className="text-sm"
                 >
-                  {category}
+                  {category.name} {/* Assuming category has a 'name' property */}
                 </Button>
               ))}
             </div>

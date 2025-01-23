@@ -1,8 +1,8 @@
 "use client";
 import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import { useState } from "react";
-import { useSelector } from "react-redux"; 
-import { toast } from "sonner"; 
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export default function RequestCategory() {
   const currentUser = useSelector((state) => state.user.currentUser); // Redux state for user
@@ -22,38 +22,74 @@ export default function RequestCategory() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!categoryName || !image || !description) {
       toast.error("Please fill out all fields!");
       return;
     }
+
     setUploading(true);
-    const imageUrl = await uploadImage(image);
-    if (!imageUrl) {
-      setUploading(false);
-      return;
-    }
-    const requestData = {
-      userId: currentUser._id,
-      categoryName,
-      image: imageUrl,
-      description,
-    };
 
     try {
-      console.log("Request data:", requestData);
+      // Step 1: Fetch all existing categories
+      const checkResponse = await fetch(
+        `/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=true&fetchType=categories`,
+        {
+          method: "GET",
+        }
+      );
+      const checkResult = await checkResponse.json();
+
+      if (checkResponse.ok) {
+        const { categories } = checkResult;
+
+        // Step 2: Check if the requested category already exists
+        const categoryExists = categories.some(
+          (category) =>
+            category.name.toLowerCase() === categoryName.toLowerCase()
+        );
+
+        if (categoryExists) {
+          toast.error("Category already exists. Please request a new category.");
+          setUploading(false);
+          return;
+        }
+      } else {
+        toast.error("Failed to fetch categories. Please try again.");
+        setUploading(false);
+        return;
+      }
+
+      // Step 3: Upload the image
+      const imageUrl = await uploadImage(image);
+      if (!imageUrl) {
+        toast.error("Failed to upload image. Please try again.");
+        setUploading(false);
+        return;
+      }
+
+      // Step 4: Submit the category request
+      const requestData = {
+        userId: currentUser._id,
+        categoryName,
+        image: imageUrl,
+        description,
+      };
+
       const response = await fetch("/api/request/categoryrequest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
       });
+
       const result = await response.json();
+
       if (response.ok) {
         toast.success("Request submitted successfully!");
         setCategoryName("");
         setImage(null);
         setImagePreview(null);
         setDescription("");
-        
       } else {
         toast.error(result.message || "Failed to submit request.");
       }
@@ -72,7 +108,6 @@ export default function RequestCategory() {
           Request to Add a Category
         </h1>
         <div className="flex items-center space-x-4">
-          {console.log(currentUser.profilePicture)}
           {currentUser.profilePicture ? (
             <img
               src={currentUser.profilePicture}
@@ -89,7 +124,9 @@ export default function RequestCategory() {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2">Category Name</label>
+            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
+              Category Name
+            </label>
             <input
               type="text"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
@@ -99,7 +136,9 @@ export default function RequestCategory() {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2">Category Image</label>
+            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2">
+              Category Image
+            </label>
             <input
               type="file"
               accept="image/*"

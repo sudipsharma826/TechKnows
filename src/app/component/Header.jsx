@@ -75,6 +75,7 @@ export default function Header() {
       toast.success('Logged out successfully!')
   
       // Redirect to the homepage
+      window.location.reload();
       router.push('/')
     } catch (error) {
       toast.error('Error during logout')

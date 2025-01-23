@@ -62,6 +62,9 @@ export function DashSideBar() {
           {/* Shared Section for Admin and Superadmin */}
           {['superadmin', 'admin'].includes(currentUser?.role) && (
             <>
+            <Sidebar.Item icon={HiPencil}>
+                  <Link href="/page/dashboard?tab=createpost">Create Post</Link>
+                </Sidebar.Item>
               <Sidebar.Item icon={HiDocumentText}>
                 <Link href="/page/dashboard?tab=getpost">Posts</Link>
               </Sidebar.Item>

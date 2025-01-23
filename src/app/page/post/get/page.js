@@ -16,12 +16,12 @@ export default function GetPost() {
     // Fetch posts based on the user's ID and role
     useEffect(() => {
         const fetchPosts = async () => {
-            if (!currentUser) return; // Ensure the currentUser exists
+            if (!currentUser || !currentUser._id || !currentUser.role) return; // Ensure currentUser has ID and role
 
             try {
                 // Fetch posts from the API
                 const response = await fetch(
-                    `/api/post?userRole=${currentUser.role}&userId=${currentUser._id}`,
+                    `/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=false`,
                     {
                         method: 'GET',
                         headers: {
@@ -39,11 +39,12 @@ export default function GetPost() {
                 setUserPosts(posts); // Update state with the fetched posts
             } catch (error) {
                 console.error('Error fetching posts:', error);
+                toast.error("Error fetching posts.");
             }
         };
 
         fetchPosts();
-    }, [currentUser]);
+    }, [currentUser]); // Dependency on currentUser to refetch posts when user changes
 
     // Handle post deletion
     const handleDeletePost = async () => {

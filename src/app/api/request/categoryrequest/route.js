@@ -25,6 +25,15 @@ export async function POST(req) {
       return createResponse({ error: "User not found" }, 404);
     }
 
+    //Check the category already exits
+    const categoryFetch = await Category.find({name:categoryName});
+    if(categoryFetch)
+    {
+      return createResponse({
+        error: "Category already exisits"
+      })
+    }
+
     if (user.role === "superadmin") {
       const categoryExists = await Category.findOne({ name: categoryName });
       if (categoryExists) {

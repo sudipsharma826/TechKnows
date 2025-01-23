@@ -2,38 +2,58 @@ import User from '@/lib/models/userModel';
 import Post from '../../../lib/models/postModel';
 import connect from '../../../lib/mongodb/mongoose';
 import mongoose from 'mongoose';
+import Category from '../../../lib/models/categoryModel';
 
 export async function POST(req) {
     try {
         // Connect to the database
         await connect();
 
-        const { 
-            title, 
-            subtitle, 
-            categories, 
-            content, 
-            imageUrl, 
-            isFeatured, 
-            isPremium, 
-            createdBy, 
-            userRole 
+        const {
+            title,
+            subtitle,
+            categories,
+            content,
+            imageUrl,
+            isFeatured,
+            isPremium,
+            createdBy,
+            userRole,
         } = await req.json();
 
         // Validate required fields
         if (!title || !categories || !content || !createdBy) {
             return new Response(
-                JSON.stringify({ error: 'Title, categories, content, and createdBy are required' }),
+                JSON.stringify({
+                    error: 'Title, categories, content, and createdBy are required',
+                }),
                 { status: 400, headers: { 'Content-Type': 'application/json' } }
             );
         }
 
-        //Generate the slug
+        // Check if the provided categories exist
+        const validCategories = await Category.find({ _id: { $in: categories } });
+        if (validCategories.length !== categories.length) {
+            return new Response(
+                JSON.stringify({
+                    error: 'Some categories are not listed. Post cannot be saved.',
+                }),
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // Increment the postCount for the valid categories (only for new posts)
+        await Category.updateMany(
+            { _id: { $in: categories } },
+            { $inc: { postCount: 1 } }
+        );
+
+        // Generate the slug
         const slug = title
-        .toLowerCase()
-        .split(' ')
-        .join('-')
-        .replace(/[^a-zA-Z0-9-]/g, '');
+            .toLowerCase()
+            .split(' ')
+            .join('-')
+            .replace(/[^a-zA-Z0-9-]/g, '');
 
         // Create a new post
         const newPost = new Post({
@@ -54,21 +74,31 @@ export async function POST(req) {
         // If the user is not a superadmin, handle admin-specific logic
         if (userRole !== 'superadmin') {
             const adminCollectionName = `admin_${createdBy}`;
-            console.log("Admin Collection Name:", adminCollectionName);
+            console.log('Admin Collection Name:', adminCollectionName);
 
             // Retrieve the dynamically created admin model
-            const adminModel = mongoose.models[adminCollectionName] || mongoose.model(adminCollectionName, new mongoose.Schema({
-                userId: { type: mongoose.Schema.Types.ObjectId, required: true },
-                name: { type: String, required: true },
-                email: { type: String, required: true },
-                posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
-                isActive: { type: Boolean, default: true },
-            }), adminCollectionName);
+            const adminModel =
+                mongoose.models[adminCollectionName] ||
+                mongoose.model(
+                    adminCollectionName,
+                    new mongoose.Schema(
+                        {
+                            userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+                            name: { type: String, required: true },
+                            email: { type: String, required: true },
+                            posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+                            isActive: { type: Boolean, default: true },
+                        },
+                        { timestamps: true }
+                    ),
+                    adminCollectionName
+                );
 
             // Add the post ID to the admin's posts array
             await adminModel.updateOne(
                 { userId: new mongoose.Types.ObjectId(createdBy) },
-                { $push: { posts: newPost._id } } // Add the post ID to the posts array
+                { $push: { posts: newPost._id } },
+                { upsert: true }
             );
 
             console.log("Post added to admin's posts successfully.");
@@ -94,27 +124,69 @@ export async function GET(req) {
     const url = new URL(req.url);
     const userRole = url.searchParams.get('userRole');
     const userId = url.searchParams.get('userId');
+    const general = url.searchParams.get('general') === 'true'; // Optional, fetchType is only valid if this is true
+    const fetchType = url.searchParams.get('fetchType'); // Can be 'posts', 'categories', or 'all'
+    const postId = url.searchParams.get('postId'); // Optional for specific post fetching
 
+    // Validate mandatory parameters
     if (!userRole || !userId) {
         return new Response(
             JSON.stringify({ error: 'User role and user ID are required' }),
             { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
     }
+
+    // Validate user existence and role
     const getUserRole = await User.findOne({ 
-        _id: userId,
+        _id: userId, 
         role: userRole 
     });
-    
+    console.log("Received from URL", userRole, userId);
+    console.log("Get user role:", getUserRole);
+
     if (!getUserRole) {
         return new Response(
             JSON.stringify({ error: 'User ID or role is incorrect' }),
             { status: 404, headers: { 'Content-Type': 'application/json' } }
         );
     }
-    
 
     try {
+        // If general is true, fetch categories or posts based on fetchType
+        if (general) {
+            if (!fetchType) {
+                return new Response(
+                    JSON.stringify({ error: 'fetchType is required when general is true' }),
+                    { status: 400, headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+
+            let data = {};
+
+            if (fetchType === 'categories') {
+                // Fetch categories where isApproved is true and sort by createdAt
+                data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+            } else if (fetchType === 'posts') {
+                // Fetch posts and sort by createdAt
+                data.posts = await Post.find().sort({ createdAt: -1 });
+            } else if (fetchType === 'all') {
+                // Fetch both posts and categories
+                data.posts = await Post.find().sort({ createdAt: -1 });
+                data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+            } else {
+                return new Response(
+                    JSON.stringify({ error: 'Invalid fetchType. Use "categories", "posts", or "all".' }),
+                    { status: 400, headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+
+            return new Response(JSON.stringify(data), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        // If general is false, fetch posts based on user role
         if (userRole === 'superadmin') {
             const posts = await Post.find().sort({ updatedAt: -1 });
             return new Response(JSON.stringify(posts), {
@@ -142,18 +214,21 @@ export async function GET(req) {
             });
         }
 
+        // If no specific role, return an error
         return new Response(
             JSON.stringify({ error: 'Invalid user role' }),
             { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error('Error fetching data:', error);
         return new Response(
             JSON.stringify({ error: 'Internal server error' }),
             { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }
 }
+
+
 
 export async function DELETE(req) {
     const { userID, postID } = await req.json();
