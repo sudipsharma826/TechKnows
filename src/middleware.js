@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import { toast } from "sonner";
 
 export const config = {
   matcher: [
@@ -13,82 +12,75 @@ export const config = {
 
 export async function middleware(req) {
   const url = req.nextUrl.clone();
-  const pathname = url.pathname;
-  const searchParams = url.searchParams;
+  const { pathname, searchParams } = url;
 
   // Retrieve the accessToken from cookies
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("acesstoken")?.value;
 
-  console.log("Access token:", accessToken); // Debugging token
-
   let role = null;
   let isActive = null;
 
+  // Decode the JWT if accessToken exists
   if (accessToken) {
     try {
-      // Decode the JWT and extract role and isActive
       const decoded = jwt.decode(accessToken);
       role = decoded?.role || null;
       isActive = decoded?.isActive || null;
-
-      console.log("Decoded role:", role);
-      console.log("Decoded isActive:", isActive);
     } catch (error) {
-      console.error("Token decoding failed:", error);
+      console.error("Error decoding token:", error);
     }
   }
 
-  // Define protected routes with allowed roles
+  // Define protected routes with roles
   const protectedRoutes = [
     {
       path: "/page/dashboard",
-      roles: ["user", "admin", "superadmin"], // General access for all roles
+      roles: ["user", "admin", "superadmin"], // Accessible to all roles
     },
     {
       path: "/page/dashboard/requests",
-      roles: ["superadmin"], // Specific access for superadmins
-      tab: "requests",       // Additional query param check
+      roles: ["superadmin"], // Only superadmins can access
+      tab: "requests",       // Additional query parameter check
     },
   ];
 
-  // Handle login page redirection for logged-in users
+  // Redirect logged-in users away from the login page
   if (pathname.startsWith("/auth/login") && role) {
-    url.pathname = "/page/dashboard"; // Redirect logged-in users to dashboard
+    url.pathname = "/page/dashboard"; // Redirect to dashboard
     return NextResponse.redirect(url);
   }
 
-  // If accessToken is missing, redirect to login
+  // Redirect unauthenticated users to login page
   if (!accessToken && pathname !== "/auth/login") {
     url.pathname = "/auth/login";
     url.searchParams.set("redirected", "true");
     return NextResponse.redirect(url);
   }
 
-  // Handle inactive users with a toast message and redirection
+  // Handle inactive accounts
   if (isActive === false) {
     if (pathname !== "/auth/login") {
-      url.pathname = "/auth/login"; // Redirect to login if not already there
+      url.pathname = "/auth/login";
       url.searchParams.set("toastMessage", "Your account is not verified. Please verify your email and login again.");
-      toast.info("Your account is not verified. Please verify your email and login again.");
       return NextResponse.redirect(url);
     }
   }
 
-  // Check if the route is a protected route
+  // Match the current route to a protected route
   const matchingRoute = protectedRoutes.find((route) =>
     pathname.startsWith(route.path)
   );
 
   if (matchingRoute) {
-    // If user is not authenticated, redirect to login
+    // Redirect to login if user is not authenticated
     if (!role) {
       url.pathname = "/auth/login";
-      url.searchParams.set("redirected", "true"); // Query param for toast message
+      url.searchParams.set("redirected", "true");
       return NextResponse.redirect(url);
     }
 
-    // Check for roles and optional tab parameter
+    // Check if user has the required role or tab
     if (
       !matchingRoute.roles.includes(role) ||
       (matchingRoute.tab && searchParams.get("tab") !== matchingRoute.tab)

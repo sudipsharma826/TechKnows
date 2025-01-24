@@ -14,41 +14,40 @@ import { fileChecker } from "../../component/FileChecker";
 
 const SignInPage = () => {
   const router = useRouter();
-
-  useEffect(() => {
-    if (router.query) {
-      toast.info("To access this route, you must log in first.");
-    }
-  }, [router.query]);
+  const fileInputRef = useRef(null);
+  const dispatch = useDispatch();
+  const currentUser = useSelector((state) => state.user?.currentUser);
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     profilePic: null,
   });
-  const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fileInputRef = useRef(null);
-  const dispatch = useDispatch();
-  const currentUser = useSelector((state) => state.user?.currentUser);
-
+  // Redirect if already logged in
   useEffect(() => {
     if (currentUser) {
       router.push("/"); // Redirect to home if the user is already logged in
     }
   }, [currentUser, router]);
 
+  // Display a toast if navigating to the page without being logged in
+  useEffect(() => {
+    if (router.query) {
+      toast.info("To access this route, you must log in first.");
+    }
+  }, [router.query]);
+
+  // Handle form input changes
   const handleChange = (e) => {
     const { id, value, files } = e.target;
 
     if (id === "profilePic" && files) {
       const file = files[0];
-      console.log("File:", file);
       if (file && fileChecker(file)) {
         setFormData((prev) => ({ ...prev, profilePic: file }));
-        console.log("File Data:", fileData);
       } else {
         toast.error("Invalid file type. Please upload a PNG or JPEG image.");
       }
@@ -57,6 +56,7 @@ const SignInPage = () => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -99,10 +99,9 @@ const SignInPage = () => {
     }
   };
 
+  // Handle profile picture click to open file input
   const handleEditClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    fileInputRef.current?.click();
   };
 
   return (
@@ -143,6 +142,7 @@ const SignInPage = () => {
                   Or continue with
                 </span>
               </div>
+
               <form
                 className="space-y-6"
                 onSubmit={handleSubmit}
@@ -220,7 +220,7 @@ const SignInPage = () => {
                   )}
                 </Button>
 
-                {showError && errorMessage && (
+                {errorMessage && (
                   <Alert className="mt-4" color="failure">
                     {errorMessage}
                   </Alert>

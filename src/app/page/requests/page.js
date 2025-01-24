@@ -7,17 +7,16 @@ import { HiClock, HiDocumentRemove, HiOutlineCheck } from "react-icons/hi";
 import { toast } from "sonner";
 
 export function Requests() {
-  const [requests, setRequests] = useState([]); // To store fetched requests data
-  const [loading, setLoading] = useState(true); // For page loading state
-  const [error, setError] = useState(null); // For error handling
-  const [actionLoading, setActionLoading] = useState(null); // For specific request action state (request ID)
-  const [refreshKey, setRefreshKey] = useState(0); // Parameter to trigger re-fetch
+  const [requests, setRequests] = useState([]); // Store fetched requests
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
+  const [actionLoading, setActionLoading] = useState(null); // Loading state for specific actions
+  const [refreshKey, setRefreshKey] = useState(0); // Triggers data re-fetch
 
   const currentUser = useSelector((state) => state.user?.currentUser || {});
 
-  // Fetch requests on component mount and whenever refreshKey changes
   useEffect(() => {
-    async function fetchRequests() {
+    const fetchRequests = async () => {
       try {
         setLoading(true);
         const response = await fetch("/api/request", {
@@ -33,65 +32,39 @@ export function Requests() {
         }
       } catch (err) {
         setError(err.message);
-        console.error(err);
+        console.error("Error fetching requests:", err);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchRequests();
-  }, [refreshKey]); // Re-fetch when refreshKey changes
+  }, [refreshKey]);
 
-  // Handle Approve, Reject, Enable, or Disable actions based on requestType
-  async function handleRequestAction(requestId, action, requestType) {
+  const handleRequestAction = async (requestId, action, requestType) => {
     try {
-      setActionLoading(requestId); // Indicate loading for the specific request
+      setActionLoading(requestId); // Indicate loading for this request
 
-      let apiUrl;
-      let method;
-      let body;
-      console.log("Request Type:", requestType);
+      const apiMap = {
+        Admin: "/api/request/adminrequest",
+        Category: "/api/request/categoryrequest",
+      };
 
-      // Dynamically select API based on requestType
-      switch (requestType) {
-        case "Admin":
-          apiUrl = "/api/request/adminrequest";
-          method = "PUT";
-          body = JSON.stringify({ requestId, action });
-          break;
-
-        case "Category":
-          apiUrl = "/api/request/categoryrequest";
-          method = "PUT";
-          body = JSON.stringify({ requestId, action });
-          break;
-
-        // Add additional cases for other request types
-        default:
-          throw new Error("Invalid request type");
-      }
+      const apiUrl = apiMap[requestType];
+      if (!apiUrl) throw new Error("Invalid request type");
 
       const response = await fetch(apiUrl, {
-        method,
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body,
+        body: JSON.stringify({ requestId, action }),
       });
 
       if (response.ok) {
         const updatedRequest = await response.json();
-
-        // Optionally update the local state
-        setRequests((prevRequests) =>
-          prevRequests.map((req) =>
-            req._id === updatedRequest._id
-              ? { ...req, ...updatedRequest } // Merge updated data
-              : req
-          )
+        setRequests((prev) =>
+          prev.map((req) => (req._id === updatedRequest._id ? updatedRequest : req))
         );
-
-        // Refresh the data by updating the refreshKey
-        setRefreshKey((prevKey) => prevKey + 1);
-
+        setRefreshKey((prev) => prev + 1);
         toast.success(`Request ${action}ed successfully.`);
       } else {
         const errorData = await response.json();
@@ -99,15 +72,15 @@ export function Requests() {
       }
     } catch (err) {
       toast.error(err.message || "An error occurred while updating the request.");
-      console.error(err);
+      console.error("Error updating request:", err);
     } finally {
       setActionLoading(null); // Reset loading state
     }
-  }
+  };
 
   return (
     <div className="overflow-x-auto md:mt-10">
-      {/* Loading or Error handling messages */}
+      {/* Loading and error handling */}
       {loading && (
         <div className="flex justify-center items-center">
           <Spinner />
@@ -115,7 +88,9 @@ export function Requests() {
         </div>
       )}
 
-      {/* Render data if requests are fetched */}
+      {error && <div className="text-red-500 text-center">{error}</div>}
+
+      {/* Render requests table */}
       {!loading && requests.length > 0 && (
         <Table hoverable>
           <Table.Head>
@@ -137,7 +112,6 @@ export function Requests() {
                 <Table.Cell>{request.requestType || "N/A"}</Table.Cell>
                 <Table.Cell>{request.userName || "Unknown User"}</Table.Cell>
                 <Table.Cell>
-                  {/* Show status with icons */}
                   {request.status === "approved" ? (
                     <HiOutlineCheck className="h-6 w-6 text-green-500" />
                   ) : request.status === "rejected" ? (
@@ -159,11 +133,7 @@ export function Requests() {
                             }
                             disabled={actionLoading === request._id}
                           >
-                            {actionLoading === request._id ? (
-                              <Spinner size="xs" />
-                            ) : (
-                              "Approve"
-                            )}
+                            {actionLoading === request._id ? <Spinner size="xs" /> : "Approve"}
                           </Button>
                           <Button
                             color="failure"
@@ -173,15 +143,10 @@ export function Requests() {
                             }
                             disabled={actionLoading === request._id}
                           >
-                            {actionLoading === request._id ? (
-                              <Spinner size="xs" />
-                            ) : (
-                              "Reject"
-                            )}
+                            {actionLoading === request._id ? <Spinner size="xs" /> : "Reject"}
                           </Button>
                         </>
                       )}
-                      
                     </div>
                   </Table.Cell>
                 )}

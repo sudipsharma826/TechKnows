@@ -16,6 +16,7 @@ export async function POST(req) {
 
     const { userId, categoryName, image, description } = await req.json();
 
+    // Validate required fields
     if (!userId || !categoryName || !image || !description) {
       return createResponse({ error: "Missing required fields" }, 400);
     }
@@ -25,21 +26,13 @@ export async function POST(req) {
       return createResponse({ error: "User not found" }, 404);
     }
 
-    //Check the category already exits
-    const categoryFetch = await Category.find({name:categoryName});
-    if(categoryFetch)
-    {
-      return createResponse({
-        error: "Category already exisits"
-      })
+    // Check if the category already exists
+    const categoryExists = await Category.findOne({ name: categoryName });
+    if (categoryExists) {
+      return createResponse({ error: "Category already exists" }, 400);
     }
 
     if (user.role === "superadmin") {
-      const categoryExists = await Category.findOne({ name: categoryName });
-      if (categoryExists) {
-        return createResponse({ error: "Category already exists" }, 400);
-      }
-
       const newCategory = await Category.create({
         name: categoryName,
         image,
@@ -50,10 +43,13 @@ export async function POST(req) {
 
       return createResponse({ message: "Category added successfully", category: newCategory }, 201);
     } else if (user.role === "admin") {
-      const categoryExists = await Category.findOne({ name: categoryName });
-      if (categoryExists) {
-        return createResponse({ error: "Category already exists" }, 400);
-      }
+      const newCategory = await Category.create({
+        name: categoryName,
+        image,
+        description,
+        postCount: 0,
+        isApproved: false,
+      });
 
       const newRequest = await Request.create({
         requestDate: new Date(),
@@ -62,14 +58,6 @@ export async function POST(req) {
         status: "pending",
         requestedBy: userId,
         requestedFor: categoryName,
-      });
-
-      const newCategory = await Category.create({
-        name: categoryName,
-        image,
-        description,
-        postCount: 0,
-        isApproved: false,
       });
 
       return createResponse(
@@ -108,7 +96,6 @@ export async function GET() {
 export async function PUT(req) {
   try {
     const { requestId, action } = await req.json();
-    console.log("Request ID:", requestId, "Action:", action);
 
     if (!requestId || !action) {
       return createResponse({ error: "Missing required fields" }, 400);
@@ -120,24 +107,19 @@ export async function PUT(req) {
     if (!request) {
       return createResponse({ error: "Request not found" }, 404);
     }
+
     const category = await Category.findOne({ name: request.requestedFor });
     if (!category) {
       return createResponse({ error: "Category not found" }, 404);
     }
 
-    switch (action) {
-      case "approved":
-        request.status = "approved";
-        category.isApproved = true;
-        break;
-
-      case "rejected":
-        request.status = "rejected";
-        break;
-
-
-      default:
-        return createResponse({ error: "Invalid action" }, 400);
+    if (action === "approved") {
+      request.status = "approved";
+      category.isApproved = true;
+    } else if (action === "rejected") {
+      request.status = "rejected";
+    } else {
+      return createResponse({ error: "Invalid action" }, 400);
     }
 
     await request.save();

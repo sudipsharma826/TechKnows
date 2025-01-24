@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Spinner, Table } from 'flowbite-react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
-import { Toast,toast } from 'sonner';
+import { toast } from 'sonner';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -13,7 +13,7 @@ export default function Categories() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/request/categoryrequest',{
+        const response = await fetch('/api/request/categoryrequest', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -21,6 +21,7 @@ export default function Categories() {
         setCategories(data);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        toast.error('Failed to fetch categories. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -30,10 +31,11 @@ export default function Categories() {
   }, []);
 
   if (loading) {
-    <div className="container mx-auto p-4">
-      <Spinner className="mx-auto" />
-    </div>
-
+    return (
+      <div className="container mx-auto p-4">
+        <Spinner className="mx-auto" />
+      </div>
+    );
   }
 
   return (

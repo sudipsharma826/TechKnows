@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import { useState } from "react";
 import { useSelector } from "react-redux";

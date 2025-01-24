@@ -33,9 +33,7 @@ export function DashSideBar() {
                 <Sidebar.Item icon={HiClipboardList}>
                   <Link href="/page/dashboard?tab=addcategories">Add Category</Link>
                 </Sidebar.Item>
-                <Sidebar.Item icon={HiPencil}>
-                  <Link href="/page/dashboard?tab=createpost">Create Post</Link>
-                </Sidebar.Item>
+                
               </Sidebar.Collapse>
             </>
           )}

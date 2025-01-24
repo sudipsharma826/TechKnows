@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation"; // Use useParams for dynamic routes
+import { useRouter, useParams } from "next/navigation";
 import {
   Button,
   TextInput,
@@ -21,8 +21,9 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 export default function UpdatePost() {
   const router = useRouter();
-  const params = useParams(); // Use useParams to get dynamic route parameters
-  const postId = params?.postId; // Extract postId directly
+  const params = useParams();
+  const postId = params?.postId;
+
   const currentUser = useSelector((state) => state.user?.currentUser || {});
 
   const [title, setTitle] = useState("");
@@ -37,7 +38,7 @@ export default function UpdatePost() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // Fetch post data and categories when postId becomes available
+  // Fetch post data and categories
   useEffect(() => {
     if (postId && currentUser._id) {
       fetchPostData(postId);
@@ -46,14 +47,8 @@ export default function UpdatePost() {
   }, [postId, currentUser._id]);
 
   const fetchPostData = async (id) => {
-    if (!id) {
-      console.error("postId is undefined or invalid.");
-      toast.error("Invalid post ID.");
-      return;
-    }
-
     try {
-      const response = await fetch(`/api/post/`, {
+      const response = await fetch(`/api/post`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -65,19 +60,16 @@ export default function UpdatePost() {
         }),
       });
 
-      const data = await response.json();
+      if (!response.ok) throw new Error("Failed to load post data.");
 
-      if (response.ok) {
-        setTitle(data.title || "");
-        setSubtitle(data.subtitle || "");
-        setSelectedCategories(data.categories || []);
-        setContent(data.content || "");
-        setImageUrl(data.imageUrl || "");
-        setFeatured(data.isFeatured || false);
-        setPremium(data.isPremium || false);
-      } else {
-        toast.error("Failed to load post data.");
-      }
+      const data = await response.json();
+      setTitle(data.title || "");
+      setSubtitle(data.subtitle || "");
+      setSelectedCategories(data.categories || []);
+      setContent(data.content || "");
+      setImageUrl(data.imageUrl || "");
+      setFeatured(data.isFeatured || false);
+      setPremium(data.isPremium || false);
     } catch (error) {
       console.error("Error fetching post data:", error);
       toast.error("Failed to load post data.");
@@ -90,12 +82,11 @@ export default function UpdatePost() {
         `/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=true&fetchType=categories`,
         { method: "GET" }
       );
+
+      if (!response.ok) throw new Error("Failed to fetch categories.");
+
       const data = await response.json();
-      if (response.ok) {
-        setCategories(data.categories || []);
-      } else {
-        toast.error("Failed to fetch categories.");
-      }
+      setCategories(data.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to fetch categories.");
@@ -108,6 +99,19 @@ export default function UpdatePost() {
         ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setNewImage(file);
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => setPreviewImage(event.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewImage(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -133,28 +137,25 @@ export default function UpdatePost() {
 
       const response = await fetch(`/api/post`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           payload,
           userRole: currentUser.role,
           userId: currentUser._id,
           postId,
         }),
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
-      if (response.ok) {
-        const slug = title
-          .toLowerCase()
-          .split(" ")
-          .join("-")
-          .replace(/[^a-zA-Z0-9-]/g, "");
-        toast.success("Post updated successfully!");
-        router.push(`/post/${slug}`);
-      } else {
-        toast.error("Failed to update post.");
-      }
+      if (!response.ok) throw new Error("Failed to update post.");
+
+      const slug = title
+        .toLowerCase()
+        .split(" ")
+        .join("-")
+        .replace(/[^a-zA-Z0-9-]/g, "");
+
+      toast.success("Post updated successfully!");
+      router.push(`/post/${slug}`);
     } catch (error) {
       console.error("Error updating post:", error);
       toast.error("Failed to update post.");
@@ -163,91 +164,73 @@ export default function UpdatePost() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setNewImage(file);
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setPreviewImage(event.target.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewImage(null);
-    }
-  };
   return (
     <Card className="max-w-3xl mx-auto p-6 space-y-6 mt-15">
       <h2 className="text-2xl font-bold mb-4">Update Post</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="title" value="Post Title" />
-          <TextInput
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter post title"
-            required
+        <TextInput
+          id="title"
+          label="Post Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter post title"
+          required
+        />
+        <TextInput
+          id="subtitle"
+          label="Subtitle"
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+          placeholder="Enter post subtitle"
+        />
+        <ReactQuill
+          theme="snow"
+          value={content}
+          onChange={setContent}
+          className="h-72"
+          required
+          modules={{
+            toolbar: [
+              [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+              [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'align': [] }],
+              ['link'],
+              ['blockquote', 'code-block'],
+              [{ 'color': [] }, { 'background': [] }],
+              ['clean']
+            ]
+          }}
+          placeholder="Write content..."
+        />
+        <div className="flex flex-wrap items-center gap-4">
+          <Checkbox
+            id="featured"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
           />
-        </div>
-
-        <div>
-          <Label htmlFor="subtitle" value="Subtitle" />
-          <TextInput
-            id="subtitle"
-            value={subtitle}
-            onChange={(e) => setSubtitle(e.target.value)}
-            placeholder="Enter post subtitle"
+          <Label htmlFor="featured">Featured Post</Label>
+          <Checkbox
+            id="premium"
+            checked={premium}
+            onChange={(e) => setPremium(e.target.checked)}
           />
+          <Label htmlFor="premium">Premium Post</Label>
         </div>
-
-        <div>
-          <Label htmlFor="content" value="Content" />
-          <ReactQuill
-            theme="snow"
-            placeholder="Write something..."
-            className="h-72 mb-12"
-            value={content}
-            onChange={setContent}
-            required
+        <FileInput id="image-upload" onChange={handleImageChange} />
+        {previewImage ? (
+          <img
+            src={previewImage}
+            alt="Preview"
+            className="w-full h-64 object-cover mt-4 rounded-lg"
           />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 text-3xl">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="featured"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
-            />
-            <Label htmlFor="featured">Featured Post</Label>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="premium"
-              checked={premium}
-              onChange={(e) => setPremium(e.target.checked)}
-            />
-            <Label htmlFor="premium">Premium Post</Label>
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="image-upload" value="Upload New Image" />
-          <FileInput id="image-upload" onChange={handleImageChange} />
-          {previewImage ? (
-            <div className="mt-4">
-              <img src={previewImage} alt="New Preview" className="w-full h-64 object-cover rounded-lg" />
-            </div>
-          ) : imageUrl ? (
-            <div className="mt-4">
-              <img src={imageUrl} alt="Current Preview" className="w-full h-64 object-cover rounded-lg" />
-            </div>
-          ) : null}
-        </div>
-
+        ) : imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="Current Preview"
+            className="w-full h-64 object-cover mt-4 rounded-lg"
+          />
+        ) : null}
         <div className="flex flex-wrap gap-2 mt-2">
           {categories.map((category) => (
             <Button
@@ -261,22 +244,11 @@ export default function UpdatePost() {
             </Button>
           ))}
         </div>
-
-        <div className="flex justify-between space-x-4">
-          <Button
-            type="button"
-            onClick={() => router.push("/")}
-            color="failure"
-            className="w-full"
-          >
+        <div className="flex justify-between mt-4">
+          <Button type="button" onClick={() => router.push("/")} color="failure">
             Cancel
           </Button>
-          <Button
-            type="submit"
-            color="primary"
-            className="w-full flex items-center justify-center"
-            disabled={loading}
-          >
+          <Button type="submit" disabled={loading} color="sucess">
             {loading ? <Spinner size="sm" className="mr-2" /> : null}
             {loading ? "Updating..." : "Update Post"}
           </Button>

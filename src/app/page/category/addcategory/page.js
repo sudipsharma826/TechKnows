@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,28 +12,25 @@ export function CategoryForm({ onSubmit }) {
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [preview, setPreview] = useState('');
-  const [loading, setLoading] = useState(false); // Loading state for the button
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure image upload URL exists before submitting
     if (!image) {
       toast.error('Please upload a valid image.');
       return;
     }
 
-    const category = { 
+    const category = {
       userId: currentUser?._id,
-      categoryName: name, 
+      categoryName: name,
       description: 'Admin added category',
-      image
+      image,
     };
 
-    // Set loading state to true when submission starts
     setLoading(true);
 
-    // API call to add category
     try {
       const response = await fetch('/api/request/categoryrequest', {
         method: 'POST',
@@ -46,6 +44,7 @@ export function CategoryForm({ onSubmit }) {
         setName('');
         setImage('');
         setPreview('');
+        onSubmit && onSubmit(); // Trigger callback if provided
       } else {
         toast.error(data.error || 'Failed to add category.');
       }
@@ -53,7 +52,6 @@ export function CategoryForm({ onSubmit }) {
       console.error('Add category error:', error);
       toast.error('An unexpected error occurred.');
     } finally {
-      // Set loading state to false when API call finishes
       setLoading(false);
     }
   };
@@ -61,21 +59,18 @@ export function CategoryForm({ onSubmit }) {
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (file && fileChecker(file)) {
-      console.log('File selected:', file);  // Debug log to check file selection
-
       const imageUrl = URL.createObjectURL(file);
       setPreview(imageUrl);
 
-      // Upload image to Cloudinary
       try {
-        console.log('Uploading image to Cloudinary...');
-        const upload = await uploadImage(file);  
-        console.log('Upload response:', upload); 
-        setImage(upload);  // Update the image URL state
+        const upload = await uploadImage(file);
+        setImage(upload);
       } catch (error) {
         console.error('Image upload error:', error);
         toast.error('Failed to upload image.');
       }
+    } else {
+      toast.error('Invalid file. Please select a valid image.');
     }
   };
 
@@ -131,7 +126,7 @@ export function CategoryForm({ onSubmit }) {
             </div>
           ) : (
             <div className="space-y-1 text-center">
-              {/* <Upload className="mx-auto h-12 w-12 text-gray-400" /> */}
+              <Upload className="mx-auto h-12 w-12 text-gray-400" />
               <div className="flex text-sm text-gray-600">
                 <label
                   htmlFor="image"
@@ -157,12 +152,16 @@ export function CategoryForm({ onSubmit }) {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={loading}  // Disable the button while loading
-        className={`w-full py-2 px-4 rounded-lg transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+        disabled={loading}
+        className={`w-full py-2 px-4 rounded-lg transition duration-200 ${
+          loading
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`}
       >
         {loading ? (
           <div className="flex justify-center">
-            <div className="w-6 h-6 border-4 border-t-4 border-white border-solid rounded-full animate-spin" />
+            <div className="w-6 h-6 border-4 border-t-4 border-white rounded-full animate-spin"></div>
           </div>
         ) : (
           'Add Category'

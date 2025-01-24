@@ -9,15 +9,27 @@ const adminSchema = new mongoose.Schema({
   email: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true },
   isActive: { type: Boolean, default: true },
-  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }], // Include posts field
+  posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 });
 
 // Helper function to get or create the dynamic model
 function getAdminModel(collectionName) {
-  if (mongoose.models[collectionName]) {
-    return mongoose.models[collectionName]; // Use the existing model
-  }
-  return mongoose.model(collectionName, adminSchema, collectionName); // Create a new model
+  return mongoose.models[collectionName] || mongoose.model(collectionName, adminSchema, collectionName);
+}
+
+// Standardized response helper
+function createResponse(message, status = 200) {
+  return new Response(
+    JSON.stringify({ message }),
+    { status, headers: { "Content-Type": "application/json" } }
+  );
+}
+
+function createErrorResponse(error, status = 400) {
+  return new Response(
+    JSON.stringify({ error }),
+    { status, headers: { "Content-Type": "application/json" } }
+  );
 }
 
 // PUT request to handle admin actions (approve, reject, enable, disable)
@@ -25,89 +37,59 @@ export async function PUT(req) {
   const { requestId, action } = await req.json();
 
   if (!requestId || !action) {
-    return new Response(
-      JSON.stringify({ error: "requestId and action are required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return createErrorResponse("requestId and action are required", 400);
   }
 
   try {
     await connect(); // Connect to MongoDB
 
-    // Fetch the request
     const request = await Request.findById(requestId);
     if (!request) {
-      return new Response(
-        JSON.stringify({ error: "Request not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("Request not found", 404);
     }
 
-    // Fetch the user
     const user = await User.findById(request.requestedBy);
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("User not found", 404);
     }
 
-    // Handle actions
     const adminCollectionName = `admin_${user._id}`;
     const AdminModel = getAdminModel(adminCollectionName);
 
     switch (action) {
       case "approved":
-        // Update the request status
         request.status = "approved";
         await request.save();
 
-        // Check if the admin document exists
         let adminDoc = await AdminModel.findOne({ userId: user._id });
         if (!adminDoc) {
-          // Create the admin document if it doesn't exist
           adminDoc = new AdminModel({
             name: user.displayName,
             email: user.email,
             userId: user._id,
-            posts: [], // Initialize with an empty array for posts
+            posts: [],
           });
           await adminDoc.save();
         }
 
-        // Update the user role
         await User.findByIdAndUpdate(user._id, { role: "admin" });
 
-        return new Response(
-          JSON.stringify({ message: "Request approved." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
+        return createResponse("Request approved.", 200);
 
       case "rejected":
-        // Update the request status
         request.status = "rejected";
         await request.save();
-        return new Response(
-          JSON.stringify({ message: "Request rejected." }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
 
+        return createResponse("Request rejected.", 200);
 
       default:
-        return new Response(
-          JSON.stringify({ error: "Invalid action" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
+        return createErrorResponse("Invalid action", 400);
     }
   } catch (error) {
     console.error("Error during PUT request:", error);
-    return new Response(
-      JSON.stringify({ error: "An error occurred" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return createErrorResponse("An error occurred", 500);
   }
 }
-
 
 // POST request to approve or reject the admin request
 export async function POST(req) {
@@ -115,18 +97,11 @@ export async function POST(req) {
     const { userId, requestType, description } = await req.json();
 
     if (!userId || !requestType || !description) {
-      return new Response(
-        JSON.stringify({
-          error: "userId, requestType, and description are required",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("userId, requestType, and description are required", 400);
     }
 
-    // Connect to the database
-    await connect();
+    await connect(); // Connect to MongoDB
 
-    // Create the new request entry using the Request model
     const newRequest = new Request({
       requestedDate: new Date(),
       requestedBy: userId,
@@ -137,19 +112,11 @@ export async function POST(req) {
       checkedDate: null,
     });
 
-    // Save the new request to the database
     await newRequest.save();
 
-    return new Response(
-      JSON.stringify({ message: "Request submitted successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return createResponse("Request submitted successfully", 200);
   } catch (error) {
     console.error("Error during request submission:", error);
-    return new Response(
-      JSON.stringify({ error: "Error during request submission" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return createErrorResponse("Error during request submission", 500);
   }
 }
-

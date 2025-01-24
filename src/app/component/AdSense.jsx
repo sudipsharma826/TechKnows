@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 
 const AdSpaceContainer = () => {
   useEffect(() => {
-   
     const script = document.createElement('script');
     script.async = true;
     script.src = process.env.NEXT_PUBLIC_ADSENSE_SRC;
@@ -11,7 +10,6 @@ const AdSpaceContainer = () => {
     };
     document.body.appendChild(script);
 
-    
     return () => {
       document.body.removeChild(script);
     };
@@ -25,7 +23,6 @@ const AdSpaceContainer = () => {
     auto: {},
   };
 
-  
   const aspectRatio = "auto";
 
   return (

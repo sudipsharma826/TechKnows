@@ -1,109 +1,99 @@
 "use client";
-import 
-{ useState, useEffect } from "react";
-import { Button, TextInput, Card, Label, FileInput, Checkbox } from "flowbite-react";
+import { useState, useEffect } from "react";
+import {
+  Button,
+  TextInput,
+  Card,
+  Label,
+  FileInput,
+  Checkbox,
+} from "flowbite-react";
 import dynamic from "next/dynamic";
 import AdSpaceContainer from "@/app/component/AdSense";
 import { fileChecker } from "../../../component/FileChecker";
 import { uploadImage } from "@/app/config/cloudinary/cloudinary";
 import { toast } from "sonner";
-import 'react-quill-new/dist/quill.snow.css';
+import "react-quill-new/dist/quill.snow.css";
 import { useSelector } from "react-redux";
 
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 export default function CreatePost() {
   const currentUser = useSelector((state) => state.user?.currentUser || {});
-
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]); // Initialize as an empty array
+  const [allCategories, setAllCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
   const [content, setContent] = useState("");
   const [featured, setFeatured] = useState(false);
   const [premium, setPremium] = useState(false);
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);  // For image preview
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
 
-  // Fetch categories from the backend on mount
+  // Fetch categories on mount and filter based on the search query
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=true&fetchType=categories
-`, {
-          method: "GET",
-        });
+        const response = await fetch(
+          `/api/post?userRole=${currentUser.role}&userId=${currentUser._id}&general=true&fetchType=categories`
+        );
         const data = await response.json();
-        console.log("Data from categories ",data)
         if (response.ok) {
-          setFilteredCategories(data.categories); // Set categories from backend
+          setAllCategories(data.categories);
+          setFilteredCategories(data.categories); // Initialize filtered categories
         } else {
           toast.error("Failed to fetch categories.");
         }
       } catch (error) {
-        console.error("An error occurred:", error);
+        console.error("Error fetching categories:", error);
         toast.error("An error occurred while fetching categories.");
       }
     };
 
-    if (currentUser._id) {
-      fetchCategories();
-    }
+    if (currentUser._id) fetchCategories();
   }, [currentUser._id, currentUser.role]);
 
-  // Handle search functionality for categories
-  const handleCategorySearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setCategorySearch(searchValue);
+  useEffect(() => {
     // Filter categories based on search
-    setFilteredCategories((prevCategories) =>
-      prevCategories.filter((category) =>
-        category.name.toLowerCase().includes(searchValue) // Assuming categories have a `name` property
-      )
+    const filtered = allCategories.filter((category) =>
+      category.name.toLowerCase().includes(categorySearch.toLowerCase())
     );
-  };
+    setFilteredCategories(filtered);
+  }, [categorySearch, allCategories]);
 
-  // Handle category selection/deselection
-  const handleCategoryChange = (category) => {
+  const handleCategoryChange = (categoryId) => {
     setSelectedCategories((prev) =>
-      prev.includes(category._id)
-        ? prev.filter((c) => c !== category._id)
-        : [...prev, category._id]
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
-  // Handle image change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     try {
       fileChecker(file);
       setImage(file);
 
-      // Preview image
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  // Handle post submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
       let imageUrl = "";
-
-      if (image) {
-        imageUrl = await uploadImage(image);
-      }
-
+      if (image) imageUrl = await uploadImage(image);
+  
       const payload = {
         userRole: currentUser.role,
         createdBy: currentUser._id,
@@ -115,32 +105,41 @@ export default function CreatePost() {
         isPremium: premium,
         imageUrl,
       };
-
+  
       const response = await fetch("/api/post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
+  
+      // Check if the response is ok (status code 2xx)
       if (response.ok) {
         toast.success("Post created successfully!");
-        setTitle("");
-        setSubtitle("");
-        setSelectedCategories([]);
-        setContent("");
-        setFeatured(false);
-        setPremium(false);
-        setImage(null);
-        setImagePreview(null);
+        resetForm();
       } else {
-        toast.error("Failed to create post. Please try again.");
+        // If the response is not ok, extract the error message from the response
+        const errorData = await response.json();
+        toast.error(`Failed to create post: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      console.error("An error occurred:", error);
+      console.error("Error submitting post:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+  
+
+  const resetForm = () => {
+    setTitle("");
+    setSubtitle("");
+    setSelectedCategories([]);
+    setContent("");
+    setFeatured(false);
+    setPremium(false);
+    setImage(null);
+    setImagePreview(null);
+    setCategorySearch("");
   };
 
   return (
@@ -174,19 +173,22 @@ export default function CreatePost() {
             <TextInput
               placeholder="Search categories..."
               value={categorySearch}
-              onChange={handleCategorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
             />
-            <Label value="Categories" className="mt-2" />
             <div className="flex flex-wrap gap-2 mt-2">
               {filteredCategories.map((category) => (
                 <Button
-                  key={category._id} // Assuming each category has a unique _id
+                  key={category._id}
                   type="button"
-                  color={selectedCategories.includes(category._id) ? "success" : "gray"}
-                  onClick={() => handleCategoryChange(category)}
+                  color={
+                    selectedCategories.includes(category._id)
+                      ? "success"
+                      : "gray"
+                  }
+                  onClick={() => handleCategoryChange(category._id)}
                   className="text-sm"
                 >
-                  {category.name} {/* Assuming category has a 'name' property */}
+                  {category.name}
                 </Button>
               ))}
             </div>
@@ -223,7 +225,6 @@ export default function CreatePost() {
               onChange={(e) => setFeatured(e.target.checked)}
             />
             <Label htmlFor="featured">Featured Post</Label>
-
             <Checkbox
               id="premium"
               checked={premium}
@@ -239,24 +240,22 @@ export default function CreatePost() {
               onChange={handleImageChange}
               helperText="PNG, JPG, JPEG (Max: 5MB)"
             />
-            {/* Display Image Preview */}
             {imagePreview && (
               <div className="mt-4">
-                <img src={imagePreview} alt="Image Preview" className="w-full h-auto rounded" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-auto rounded"
+                />
               </div>
             )}
           </div>
 
           <div className="flex space-x-4">
-            <Button type="submit" className="flex-1" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Post"}
             </Button>
-            <Button
-              type="button"
-              color="gray"
-              className="flex-1"
-              onClick={() => alert("Cancelled")}
-            >
+            <Button type="button" color="gray" onClick={resetForm}>
               Cancel
             </Button>
           </div>
