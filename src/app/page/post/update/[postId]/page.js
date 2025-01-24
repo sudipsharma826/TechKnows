@@ -155,7 +155,7 @@ export default function UpdatePost() {
         .replace(/[^a-zA-Z0-9-]/g, "");
 
       toast.success("Post updated successfully!");
-      router.push(`/post/${slug}`);
+      router.push(`/posts/${slug}`);
     } catch (error) {
       console.error("Error updating post:", error);
       toast.error("Failed to update post.");

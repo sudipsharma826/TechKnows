@@ -117,7 +117,6 @@ export default function CreatePost() {
         toast.success("Post created successfully!");
         resetForm();
       } else {
-        // If the response is not ok, extract the error message from the response
         const errorData = await response.json();
         toast.error(`Failed to create post: ${errorData.error || response.statusText}`);
       }

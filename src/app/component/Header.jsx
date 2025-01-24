@@ -117,7 +117,7 @@ export default function Header() {
             </form>
 
             {/* Navigation Links */}
-            {[{ href: '/', label: 'Home' }, { href: '/about', label: 'About' }, { href: '/contact', label: 'Contact' }, { href: '/posts', label: 'Posts' }, { href: '/categories', label: 'Categories' }]
+            {[{ href: '/', label: 'Home' }, { href: '/about', label: 'About' }, { href: '/posts', label: 'Posts' }]
               .map((link) => (
                 <Link
                   key={link.href}
@@ -299,7 +299,7 @@ export default function Header() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden flex flex-col mt-4 space-y-4">
-            {[{ href: '/', label: 'Home' }, { href: '/about', label: 'About' }, { href: '/contact', label: 'Contact' }, { href: '/posts', label: 'Posts' }, { href: '/categories', label: 'Categories' }]
+            {[{ href: '/', label: 'Home' }, { href: '/about', label: 'About' }, { href: '/posts', label: 'Posts' }]
               .map((link) => (
                 <Link
                   key={link.href}

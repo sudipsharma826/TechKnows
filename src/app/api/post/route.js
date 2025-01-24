@@ -12,212 +12,250 @@ async function handleError(message, statusCode = 400) {
     );
 }
 export async function POST(req) {
-    try {
-        await connect();
+  try {
+      await connect();
 
-        const {
-            title,
-            subtitle,
-            categories,
-            content,
-            imageUrl,
-            isFeatured,
-            isPremium,
-            createdBy,
-            userRole,
-        } = await req.json();
+      const {
+          title,
+          subtitle,
+          categories, // Array of category IDs
+          content,
+          imageUrl,
+          isFeatured,
+          isPremium,
+          createdBy,
+          userRole,
+      } = await req.json();
 
-        // Validate required fields
-        if (!title || !categories || !content || !createdBy) {
-            return handleError('Title, categories, content, and createdBy are required');
-        }
+      // Validate required fields
+      if (!title || !categories || !content || !createdBy) {
+          return handleError('Title, categories, content, and createdBy are required');
+      }
 
-        // Check if categories exist and validate them in a single query
-        const validCategories = await Category.find({ _id: { $in: categories } });
-        if (validCategories.length !== categories.length) {
-            return handleError('Some categories were not found', 404);
-        }
+      // Fetch valid categories from the database
+      const validCategories = await Category.find({ _id: { $in: categories } });
+      if (validCategories.length !== categories.length) {
+          return handleError('Some categories were not found', 404);
+      }
 
-        // Increment postCount in categories
-        await Category.updateMany(
-            { _id: { $in: categories } },
-            { $inc: { postCount: 1 } }
-        );
+      // Extract category names from the valid categories
+      const categoryNames = validCategories.map((cat) => cat.name);
 
-        // Slug generation simplified
-        const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+      // Increment postCount in categories
+      await Category.updateMany(
+          { _id: { $in: categories } },
+          { $inc: { postCount: 1 } }
+      );
 
-        //Check if the title already exists (slug is unique)
-        const postExists = await Post.findOne({ slug });
-        if (postExists) {
-            return handleError('Post with this title already exists', 409); // Conflict status code
-        }
+      // Slug generation simplified
+      const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 
-        // Create and save post
-        const newPost = new Post({
-            title,
-            subtitle,
-            categories,
-            content,
-            imageUrl,
-            isFeatured,
-            isPremium,
-            createdBy,
-            slug,
-        });
+      // Check if the title already exists (slug is unique)
+      const postExists = await Post.findOne({ slug });
+      if (postExists) {
+          return handleError('Post with this title already exists', 409); // Conflict status code
+      }
 
-        await newPost.save();
+      // Create and save post, including category names
+      const newPost = new Post({
+          title,
+          subtitle,
+          categories,
+          categoryName: categoryNames, // Include category names here
+          content,
+          imageUrl,
+          isFeatured,
+          isPremium,
+          createdBy,
+          slug,
+      });
 
-        // Handle admin-specific logic for non-superadmin users
-        if (userRole !== 'superadmin') {
-            const adminCollectionName = `admin_${createdBy}`;
-            const adminModel =
-                mongoose.models[adminCollectionName] ||
-                mongoose.model(
-                    adminCollectionName,
-                    new mongoose.Schema({
-                        userId: { type: mongoose.Schema.Types.ObjectId, required: true },
-                        name: { type: String, required: true },
-                        email: { type: String, required: true },
-                        posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
-                        isActive: { type: Boolean, default: true },
-                    }),
-                    adminCollectionName
-                );
+      await newPost.save();
 
-            // Add the post ID to admin's posts array, using upsert for efficiency
-            await adminModel.updateOne(
-                { userId: new mongoose.Types.ObjectId(createdBy) },
-                { $push: { posts: newPost._id } },
-                { upsert: true }
-            );
-        }
+      // Handle admin-specific logic for non-superadmin users
+      if (userRole !== 'superadmin') {
+          const adminCollectionName = `admin_${createdBy}`;
+          const adminModel =
+              mongoose.models[adminCollectionName] ||
+              mongoose.model(
+                  adminCollectionName,
+                  new mongoose.Schema({
+                      userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+                      name: { type: String, required: true },
+                      email: { type: String, required: true },
+                      posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+                      isActive: { type: Boolean, default: true },
+                  }),
+                  adminCollectionName
+              );
 
-        return new Response(
-            JSON.stringify({ message: 'Post created successfully' }),
-            { status: 201, headers: { 'Content-Type': 'application/json' } }
-        );
-    } catch (error) {
-        console.error('Error during post creation:', error);
-        return handleError('An error occurred during post creation', 500);
-    }
+          // Add the post ID to admin's posts array, using upsert for efficiency
+          await adminModel.updateOne(
+              { userId: new mongoose.Types.ObjectId(createdBy) },
+              { $push: { posts: newPost._id } },
+              { upsert: true }
+          );
+      }
+
+      return new Response(
+          JSON.stringify({ message: 'Post created successfully' }),
+          { status: 201, headers: { 'Content-Type': 'application/json' } }
+      );
+  } catch (error) {
+      console.error('Error during post creation:', error);
+      return handleError('An error occurred during post creation', 500);
+  }
 }
 
 export async function GET(req) {
     await connect();
-
+  
     const url = new URL(req.url);
     const userRole = url.searchParams.get('userRole');
     const userId = url.searchParams.get('userId');
     const general = url.searchParams.get('general') === 'true'; // Optional, fetchType is only valid if this is true
     const fetchType = url.searchParams.get('fetchType'); // Can be 'posts', 'categories', or 'all'
     const postId = url.searchParams.get('postId'); // Optional for specific post fetching
-
-    if (!userRole || !userId) {
-        return handleError('User role and user ID are required');
+  
+    // Handle guest case
+    if (userRole === 'guest') {
+      try {
+        if (general) {
+          if (!fetchType) return handleError('fetchType is required when general is true');
+          let data = {};
+  
+          if (fetchType === 'categories') {
+            data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+          } else if (fetchType === 'posts') {
+            data.posts = await Post.find().sort({ createdAt: -1 });
+          } else if (fetchType === 'all') {
+            data.posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .populate({
+              path: "createdBy", 
+              select: "displayName profilePicture",
+            });
+          
+          // Fetch approved categories
+          data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+            
+          } else {
+            return handleError('Invalid fetchType. Use "categories", "posts", or "all".');
+          }
+  
+          return new Response(JSON.stringify(data), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching data for guest:', error);
+        return handleError('Internal server error', 500);
+      }
     }
-
+  
+    // For authenticated users (not guests)
+    if (!userRole || !userId) {
+      return handleError('User role and user ID are required');
+    }
+  
     const user = await User.findOne({ _id: userId, role: userRole });
     if (!user) {
-        return handleError('User ID or role is incorrect', 404);
+      return handleError('User ID or role is incorrect', 404);
     }
-
+  
     try {
-        if (general) {
-            if (!fetchType) return handleError('fetchType is required when general is true');
-            let data = {};
-
-            if (fetchType === 'categories') {
-                data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
-            } else if (fetchType === 'posts') {
-                data.posts = await Post.find().sort({ createdAt: -1 });
-            } else if (fetchType === 'all') {
-                data.posts = await Post.find().sort({ createdAt: -1 });
-                data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
-            } else {
-                return handleError('Invalid fetchType. Use "categories", "posts", or "all".');
-            }
-
-            return new Response(JSON.stringify(data), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            });
+      if (general) {
+        if (!fetchType) return handleError('fetchType is required when general is true');
+        let data = {};
+  
+        if (fetchType === 'categories') {
+          data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+        } else if (fetchType === 'posts') {
+          data.posts = await Post.find().sort({ createdAt: -1 });
+        } else if (fetchType === 'all') {
+          data.posts = await Post.find().sort({ createdAt: -1 });
+          data.categories = await Category.find({ isApproved: true }).sort({ createdAt: -1 });
+        } else {
+          return handleError('Invalid fetchType. Use "categories", "posts", or "all".');
         }
-
-        if (userRole === 'superadmin') {
-            // Fetch posts with category IDs
-            const posts = await Post.find()
-                .sort({ updatedAt: -1 });
-        
-            // Fetch category details for all the categories in the posts
-            const categoryIds = posts.flatMap(post => post.categories);
-            const categories = await Category.find({ '_id': { $in: categoryIds } });
-        
-            // Map category ID to category name
-            const categoryMap = categories.reduce((acc, category) => {
-                acc[category._id.toString()] = category.name; // Map category ID to category name
-                return acc;
-            }, {});
-        
-            // Map the posts to include category names instead of IDs
-            const postsWithCategories = posts.map(post => {
-                const categoryNames = post.categories.map(categoryId => categoryMap[categoryId.toString()]);
-                return { ...post.toObject(), categories: categoryNames };
-            });
-        
-            return new Response(JSON.stringify(postsWithCategories), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            });
+  
+        return new Response(JSON.stringify(data), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+  
+      if (userRole === 'superadmin') {
+        // Fetch posts with category IDs
+        const posts = await Post.find()
+          .sort({ updatedAt: -1 });
+    
+        // Fetch category details for all the categories in the posts
+        const categoryIds = posts.flatMap(post => post.categories);
+        const categories = await Category.find({ '_id': { $in: categoryIds } });
+    
+        // Map category ID to category name
+        const categoryMap = categories.reduce((acc, category) => {
+          acc[category._id.toString()] = category.name;
+          return acc;
+        }, {});
+    
+        // Map the posts to include category names instead of IDs
+        const postsWithCategories = posts.map(post => {
+          const categoryNames = post.categories.map(categoryId => categoryMap[categoryId.toString()]);
+          return { ...post.toObject(), categories: categoryNames };
+        });
+    
+        return new Response(JSON.stringify(postsWithCategories), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+  
+      if (userRole === 'admin') {
+        const adminCollectionName = `admin_${userId}`;
+        const adminModel = mongoose.models[adminCollectionName];
+    
+        const admin = await adminModel.findOne({ userId: new mongoose.Types.ObjectId(userId) }).populate('posts');
+        if (!admin) {
+          return new Response(
+            JSON.stringify({ error: 'Admin data not found' }),
+            { status: 404, headers: { 'Content-Type': 'application/json' } }
+          );
         }
-        
-        if (userRole === 'admin') {
-            const adminCollectionName = `admin_${userId}`;
-            const adminModel = mongoose.models[adminCollectionName];
-        
-            // Find the admin and populate the posts
-            const admin = await adminModel.findOne({ userId: new mongoose.Types.ObjectId(userId) }).populate('posts');
-            if (!admin) {
-                return new Response(
-                    JSON.stringify({ error: 'Admin data not found' }),
-                    { status: 404, headers: { 'Content-Type': 'application/json' } }
-                );
-            }
-        
-            // Fetch all the posts that belong to this admin
-            const posts = await Post.find({ _id: { $in: admin.posts.map(post => post._id) } });
-        
-            // Fetch category details for all the categories in the posts
-            const categoryIds = posts.flatMap(post => post.categories);
-            const categories = await Category.find({ '_id': { $in: categoryIds } });
-        
-            // Map category ID to category name
-            const categoryMap = categories.reduce((acc, category) => {
-                acc[category._id.toString()] = category.name; // Map category ID to category name
-                return acc;
-            }, {});
-        
-            // Map the posts to include category names instead of IDs
-            const postsWithCategories = posts.map(post => {
-                const categoryNames = post.categories.map(categoryId => categoryMap[categoryId.toString()]);
-                return { ...post.toObject(), categories: categoryNames };
-            });
-        
-            // Return the posts with populated categories
-            return new Response(JSON.stringify(postsWithCategories), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-        
-        
-
-        return handleError('Invalid user role');
+    
+        // Fetch all the posts that belong to this admin
+        const posts = await Post.find({ _id: { $in: admin.posts.map(post => post._id) } });
+    
+        // Fetch category details for all the categories in the posts
+        const categoryIds = posts.flatMap(post => post.categories);
+        const categories = await Category.find({ '_id': { $in: categoryIds } });
+    
+        // Map category ID to category name
+        const categoryMap = categories.reduce((acc, category) => {
+          acc[category._id.toString()] = category.name;
+          return acc;
+        }, {});
+    
+        // Map the posts to include category names instead of IDs
+        const postsWithCategories = posts.map(post => {
+          const categoryNames = post.categories.map(categoryId => categoryMap[categoryId.toString()]);
+          return { ...post.toObject(), categories: categoryNames };
+        });
+    
+        return new Response(JSON.stringify(postsWithCategories), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+  
+      return handleError('Invalid user role');
     } catch (error) {
-        console.error('Error fetching data:', error);
-        return handleError('Internal server error', 500);
+      console.error('Error fetching data:', error);
+      return handleError('Internal server error', 500);
     }
-}
+  }
 
 export async function DELETE(req) {
     const { userID, postID } = await req.json();
@@ -252,92 +290,123 @@ export async function DELETE(req) {
 }
 
 export async function PATCH(req) {
-    const { postId, userRole, userId } = await req.json();
+  const { postId, userRole, userId } = await req.json();
 
-    if (!postId || !userRole || !userId) {
-        return handleError('Post ID, userRole, and userId are required');
+  if (!postId || !userRole || !userId) {
+    return handleError('Post ID, userRole, and userId are required');
+  }
+
+  await connect();
+
+  try {
+    // If the user is a guest, fetch the post without any condition
+    if (userRole === 'guest' && userId === 'guest') {
+      const post = await Post.find({ slug: postId }) // Use findOne instead of find
+        .populate('categories', 'name image') // Populate categories with name and image
+        .populate('createdBy', 'profilePicture displayName email'); // Populate createdBy with specific fields
+
+      if (!post) return handleError('Post not found', 404);
+
+      return new Response(JSON.stringify(post), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    await connect();
-
-    try {
-        const user = await User.findById(userId);
-        if (!user || user.role !== userRole) {
-            return handleError('User not found or role mismatch', 404);
-        }
-
-        const post = await Post.findById(postId);
-        if (!post) return handleError('Post not found', 404);
-
-        // Ensure user is the author or admin/superadmin
-        if (userRole === 'user' && post.createdBy.toString() !== userId) {
-            return handleError('You are not the author of this post', 403);
-        }
-
-        return new Response(JSON.stringify(post), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } catch (error) {
-        console.error('Error fetching post:', error);
-        return handleError('Internal server error', 500);
+    // For non-guest users (user, admin, superadmin), handle the logic
+    const user = await User.findById(userId);
+    if (!user || user.role !== userRole) {
+      return handleError('User not found or role mismatch', 404);
     }
+
+    const post = await Post.findById(postId)
+      .populate('categories', 'name image') // Populate categories with name and image
+      .populate('createdBy', 'profilePicture displayName email'); // Populate createdBy with specific fields
+
+    if (!post) return handleError('Post not found', 404);
+
+    // Ensure user is the author or an admin/superadmin
+    if (userRole === 'user' && post.createdBy._id.toString() !== userId) {
+      return handleError('You are not the author of this post', 403);
+    }
+
+    return new Response(JSON.stringify(post), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return handleError('Internal server error', 500);
+  }
 }
 
 export async function PUT(req) {
-    const { postId, userId, userRole, payload } = await req.json();
+  const { postId, userId, userRole, payload } = await req.json();
 
-    if (!postId || !userId || !userRole || !payload) {
-        return handleError('Post ID, userId, userRole, and payload are required');
-    }
+  if (!postId || !userId || !userRole || !payload) {
+      return handleError('Post ID, userId, userRole, and payload are required');
+  }
 
-    await connect();
+  await connect();
 
-    try {
-        const user = await User.findById(userId);
-        if (!user || user.role !== userRole) {
-            return handleError('User not found or role mismatch', 404);
-        }
+  try {
+      const user = await User.findById(userId);
+      if (!user || user.role !== userRole) {
+          return handleError('User not found or role mismatch', 404);
+      }
 
-        const post = await Post.findById(postId);
-        if (!post) return handleError('Post not found', 404);
+      const post = await Post.findById(postId);
+      if (!post) return handleError('Post not found', 404);
 
-        // Ensure user is the author or admin/superadmin
-        if (userRole === 'user' && post.createdBy.toString() !== userId) {
-            return handleError('You are not the author of this post', 403);
-        }
+      // Ensure user is the author or admin/superadmin
+      if (userRole === 'user' && post.createdBy.toString() !== userId) {
+          return handleError('You are not the author of this post', 403);
+      }
 
-        const oldCategories = post.categories;
+      const oldCategories = post.categories;
 
-        // Update post categories (new categories from payload)
-        const newCategories = payload.categories || [];
-        
-        // Find categories that are removed and increment the post count for newly added categories
-        const categoriesToIncrement = newCategories.filter(cat => !oldCategories.includes(cat));
-        const categoriesToDecrement = oldCategories.filter(cat => !newCategories.includes(cat));
+      // Update post categories (new categories from payload)
+      const newCategories = payload.categories || [];
 
-        // Increment the post count for new categories
-        await Category.updateMany(
-            { _id: { $in: categoriesToIncrement } },
-            { $inc: { postCount: 1 } }
-        );
+      // Find categories that are removed and increment the post count for newly added categories
+      const categoriesToIncrement = newCategories.filter((cat) => !oldCategories.includes(cat));
+      const categoriesToDecrement = oldCategories.filter((cat) => !newCategories.includes(cat));
 
-        // Decrement the post count for removed categories
-        await Category.updateMany(
-            { _id: { $in: categoriesToDecrement } },
-            { $inc: { postCount: -1 } }
-        );
+      // Increment the post count for new categories
+      await Category.updateMany(
+          { _id: { $in: categoriesToIncrement } },
+          { $inc: { postCount: 1 } }
+      );
 
-        // Update the post with the new categories and other data from the payload
-        const updatedPost = await Post.findByIdAndUpdate(postId, payload, { new: true });
-        if (!updatedPost) return handleError('Failed to update post', 500);
+      // Decrement the post count for removed categories
+      await Category.updateMany(
+          { _id: { $in: categoriesToDecrement } },
+          { $inc: { postCount: -1 } }
+      );
 
-        return new Response(
-            JSON.stringify({ message: 'Post updated successfully', post: updatedPost }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
-    } catch (error) {
-        console.error('Error updating post:', error);
-        return handleError('Internal server error', 500);
-    }
+      // Fetch valid categories to get their names
+      const validCategories = await Category.find({ _id: { $in: newCategories } });
+      const categoryNames = validCategories.map((cat) => cat.name);
+
+      // Update the post with the new categories, category names, and other data from the payload
+      const updatedPost = await Post.findByIdAndUpdate(
+          postId,
+          {
+              ...payload,
+              categories: newCategories, // Update with new categories
+              categoryName: categoryNames, // Update with corresponding category names
+          },
+          { new: true }
+      );
+
+      if (!updatedPost) return handleError('Failed to update post', 500);
+
+      return new Response(
+          JSON.stringify({ message: 'Post updated successfully', post: updatedPost }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+  } catch (error) {
+      console.error('Error updating post:', error);
+      return handleError('Internal server error', 500);
+  }
 }

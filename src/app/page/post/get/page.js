@@ -89,7 +89,7 @@ export default function GetPost() {
                   {new Date(post.updatedAt).toLocaleDateString()}
                 </Table.Cell>
                 <Table.Cell>
-                  <Link href={`/post/${post.slug}`}>
+                  <Link href={`/posts/${post.slug}`}>
                     <img
                       src={post.imageUrl || "/placeholder.png"}
                       alt={post.title}
@@ -100,7 +100,7 @@ export default function GetPost() {
                 <Table.Cell>
                   <Link
                     className="font-medium text-gray-900 dark:text-white"
-                    href={`/post/${post.slug}`}
+                    href={`/posts/${post.slug}`}
                   >
                     {post.title}
                   </Link>

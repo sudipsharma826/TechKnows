@@ -1,95 +1,112 @@
-'use client'
+"use client"
 
-import { Footer as FlowbiteFooter } from 'flowbite-react'
-import Link from 'next/link'
-import { BsFacebook, BsInstagram, BsTwitter, BsGithub, BsLinkedin } from 'react-icons/bs'
-import { FiEdit } from 'react-icons/fi'
+import Link from "next/link"
+import { Facebook, Twitter, Linkedin, Github, Instagram } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { FiEdit } from "react-icons/fi"
 
 export default function Footer() {
   return (
-    <FlowbiteFooter container className="border-t bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <footer className="border-t bg-background">
+      <div className="container px-4 py-12">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand Section */}
           <div className="space-y-4">
-          <Link href="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
-              <FiEdit className="h-6 w-6 text-purple-600" />
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
+            <Link href="/" className="flex items-center space-x-2">
+              <FiEdit className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
                 TechKnows
               </span>
             </Link>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
+            <p className="text-sm text-muted-foreground">
               Discover amazing content and stay connected with our community.
             </p>
             <div className="flex space-x-4">
-              <FlowbiteFooter.Icon href="https://www.facebook.com/sudipsharma.np/" icon={BsFacebook} className="hover:text-blue-600" />
-              <FlowbiteFooter.Icon href="#" icon={BsTwitter} className="hover:text-blue-400" />
-              <FlowbiteFooter.Icon href="https://www.linkedin.com/in/sudipsharmanp/" icon={BsLinkedin} className="hover:text-blue-700" />
-              <FlowbiteFooter.Icon href="https://github.com/sudipsharma826" icon={BsGithub} className="hover:text-gray-900 dark:hover:text-white" />
-              <FlowbiteFooter.Icon href="https://www.instagram.com/sudeep_sharma.np/" icon={BsInstagram} className="hover:text-pink-600" />
+              <SocialLink href="https://facebook.com" icon={Facebook} />
+              <SocialLink href="https://twitter.com" icon={Twitter} />
+              <SocialLink href="https://linkedin.com" icon={Linkedin} />
+              <SocialLink href="https://github.com" icon={Github} />
+              <SocialLink href="https://instagram.com" icon={Instagram} />
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <FlowbiteFooter.LinkGroup col className="space-y-3">
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Home</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">About Us</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Projects</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Blog</FlowbiteFooter.Link>
-            </FlowbiteFooter.LinkGroup>
+            <nav className="flex flex-col space-y-3">
+              <FooterLink href="/">Home</FooterLink>
+              <FooterLink href="/about">About Us</FooterLink>
+              <FooterLink href="/projects">Projects</FooterLink>
+              <FooterLink href="/blog">Blog</FooterLink>
+            </nav>
           </div>
 
           {/* Categories */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
-            <FlowbiteFooter.LinkGroup col className="space-y-3">
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Technology</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Design</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Development</FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="hover:text-blue-600">Tutorials</FlowbiteFooter.Link>
-            </FlowbiteFooter.LinkGroup>
+            <nav className="flex flex-col space-y-3">
+              <FooterLink href="/categories/technology">Technology</FooterLink>
+              <FooterLink href="/categories/design">Design</FooterLink>
+              <FooterLink href="/categories/development">Development</FooterLink>
+              <FooterLink href="/categories/tutorials">Tutorials</FooterLink>
+            </nav>
           </div>
 
           {/* Newsletter */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Subscribe to our newsletter for updates and exclusive content.
             </p>
-            <form className="space-y-3">
-              <input
+            <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+              <Input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="bg-background"
               />
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                Subscribe
-              </button>
+              <Button className="w-full">Subscribe</Button>
             </form>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <FlowbiteFooter.Copyright
-              by="TechKnows"
-              year={2024}
-              className="text-gray-600 dark:text-gray-400"
-            />
-            <div className="flex space-x-6">
-              <FlowbiteFooter.Link href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                Privacy Policy
-              </FlowbiteFooter.Link>
-              <FlowbiteFooter.Link href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                Terms & Conditions
-              </FlowbiteFooter.Link>
-            </div>
+        <Separator className="my-8" />
+
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <p className="text-sm text-muted-foreground">
+            © 2024 TechKnows. All rights reserved.
+          </p>
+          <div className="flex space-x-6">
+            <FooterLink href="/privacy">Privacy Policy</FooterLink>
+            <FooterLink href="/terms">Terms & Conditions</FooterLink>
           </div>
         </div>
       </div>
-    </FlowbiteFooter>
+    </footer>
+  )
+}
+
+const SocialLink = ({ href, icon: Icon }) => {
+  return (
+    <Link
+      href={href}
+      className="text-muted-foreground hover:text-primary transition-colors"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Icon className="h-5 w-5" />
+    </Link>
+  )
+}
+
+const FooterLink = ({ href, children }) => {
+  return (
+    <Link
+      href={href}
+      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+    >
+      {children}
+    </Link>
   )
 }
