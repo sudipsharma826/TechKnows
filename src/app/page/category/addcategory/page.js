@@ -13,25 +13,29 @@ export function CategoryForm({ onSubmit }) {
   const [image, setImage] = useState('');
   const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null); // New state for the image file
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!image) {
-      toast.error('Please upload a valid image.');
+    if (!file) {
+      toast.error('Please upload an image.');
       return;
     }
 
-    const category = {
-      userId: currentUser?._id,
-      categoryName: name,
-      description: 'Admin added category',
-      image,
-    };
-
+    // Upload the image to Cloudinary
     setLoading(true);
-
     try {
+      const upload = await uploadImage(file); // Upload image
+      setImage(upload); // Store the URL of the uploaded image
+
+      const category = {
+        userId: currentUser?._id,
+        categoryName: name,
+        description: 'Admin added category',
+        image: upload, // Save the image URL
+      };
+
       const response = await fetch('/api/request/categoryrequest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,6 +48,7 @@ export function CategoryForm({ onSubmit }) {
         setName('');
         setImage('');
         setPreview('');
+        setFile(null); // Clear file state
         onSubmit && onSubmit(); // Trigger callback if provided
       } else {
         toast.error(data.error || 'Failed to add category.');
@@ -57,20 +62,11 @@ export function CategoryForm({ onSubmit }) {
   };
 
   const handleImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (file && fileChecker(file)) {
-      const imageUrl = URL.createObjectURL(file);
-      setPreview(imageUrl);
-
-      try {
-        const upload = await uploadImage(file);
-        setImage(upload);
-      } catch (error) {
-        console.error('Image upload error:', error);
-        toast.error('Failed to upload image.');
-      }
-    } else {
-      toast.error('Invalid file. Please select a valid image.');
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && fileChecker(selectedFile)) {
+      setFile(selectedFile); // Save file object
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setPreview(imageUrl); // Set preview of the image
     }
   };
 
@@ -118,6 +114,7 @@ export function CategoryForm({ onSubmit }) {
                 onClick={() => {
                   setPreview('');
                   setImage('');
+                  setFile(null); // Clear the file state
                 }}
                 className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
               >
