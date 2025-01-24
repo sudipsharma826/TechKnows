@@ -11,9 +11,9 @@ export default function Footer() {
   return (
     <footer className="border-t bg-background">
       <div className="container px-4 py-12">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="">
           {/* Brand Section */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
               <FiEdit className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
@@ -22,28 +22,28 @@ export default function Footer() {
             </Link>
             <p className="text-sm text-muted-foreground">
               Discover amazing content and stay connected with our community.
-            </p>
-            <div className="flex space-x-4">
-              <SocialLink href="https://facebook.com" icon={Facebook} />
-              <SocialLink href="https://twitter.com" icon={Twitter} />
-              <SocialLink href="https://linkedin.com" icon={Linkedin} />
-              <SocialLink href="https://github.com" icon={Github} />
-              <SocialLink href="https://instagram.com" icon={Instagram} />
-            </div>
-          </div>
+            </p> */}
+            {/* <div className="flex space-x-4"> */}
+              {/* <SocialLink href="https://www.facebook.com/sudipsharma.np/" icon={Facebook} /> */}
+              {/* <SocialLink href="https://twitter.com" icon={Twitter} /> */}
+              {/* <SocialLink href="https://www.linkedin.com/in/sudipsharmanp/" icon={Linkedin} /> */}
+              {/* <SocialLink href="https://github.com/sudipsharma826" icon={Github} /> */}
+              {/* <SocialLink href="https://www.instagram.com/sudeep_sharma.np/" icon={Instagram} /> */}
+            {/* </div> */}
+          {/* </div> */}
 
           {/* Quick Links */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <nav className="flex flex-col space-y-3">
               <FooterLink href="/">Home</FooterLink>
               <FooterLink href="/about">About Us</FooterLink>
               <FooterLink href="/projects">Projects</FooterLink>
-              <FooterLink href="/blog">Blog</FooterLink>
+              <FooterLink href="/posts">Posts</FooterLink>
             </nav>
-          </div>
+          </div> */}
 
-          {/* Categories */}
+          {/* Categories
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
             <nav className="flex flex-col space-y-3">
@@ -52,10 +52,10 @@ export default function Footer() {
               <FooterLink href="/categories/development">Development</FooterLink>
               <FooterLink href="/categories/tutorials">Tutorials</FooterLink>
             </nav>
-          </div>
+          </div> */}
 
           {/* Newsletter */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Subscribe to our newsletter for updates and exclusive content.
@@ -68,19 +68,30 @@ export default function Footer() {
               />
               <Button className="w-full">Subscribe</Button>
             </form>
-          </div>
+          </div> */}
         </div>
 
         <Separator className="my-8" />
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <p className="text-sm text-muted-foreground">
-            © 2024 TechKnows. All rights reserved.
+            © 2025 TechKnows. All rights reserved.
           </p>
-          <div className="flex space-x-6">
+          <Link href="/" className="flex items-center space-x-2">
+              <FiEdit className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                TechKnows
+              </span>
+            </Link>
+          {/* <SocialLink href="https://www.facebook.com/sudipsharma.np/" icon={Facebook} />
+              {/* <SocialLink href="https://twitter.com" icon={Twitter} /> */}
+              {/* <SocialLink href="https://www.linkedin.com/in/sudipsharmanp/" icon={Linkedin} /> */}
+              {/* <SocialLink href="https://github.com/sudipsharma826" icon={Github} /> */}
+              {/* <SocialLink href="https://www.instagram.com/sudeep_sharma.np/" icon={Instagram} /> */}
+          {/* <div className="flex space-x-6">
             <FooterLink href="/privacy">Privacy Policy</FooterLink>
             <FooterLink href="/terms">Terms & Conditions</FooterLink>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

@@ -38,7 +38,7 @@ export default function Home() {
     <main className="min-h-screen">
       <HeroSection />
       <FeaturedPosts posts={posts} />
-      <AllPosts posts={posts} categories={categories} />
+      {/* <AllPosts posts={posts} categories={categories} /> */}
       <PostSlider posts={posts} />
     </main>
   );
