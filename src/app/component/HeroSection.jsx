@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 export default function HeroSection() {
   return (
-    <div className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 mt-10">
+    <div className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 md:mt-20">
       <div className="container px-4 md:px-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-center">
           <div className="flex flex-col justify-center space-y-4">
