@@ -32,18 +32,12 @@ export async function middleware(req) {
     }
   }
 
-  // Define protected routes with roles
-  const protectedRoutes = [
-    {
-      path: "/page/dashboard",
-      roles: ["user", "admin", "superadmin"], // Accessible to all roles
-    },
-    {
-      path: "/page/dashboard/requests",
-      roles: ["superadmin"], // Only superadmins can access
-      tab: "requests",       // Additional query parameter check
-    },
-  ];
+  // Define restricted routes for each role
+  const restrictedPaths = {
+    user: ["/page/dashboard/requests", "/page/dashboard/admin-only"], // Paths restricted to 'user'
+    admin: ["/page/dashboard/requests","/page/dashboard/packages"], // Paths restricted to 'admin'
+    superadmin: [], // No restricted paths for superadmin
+  };
 
   // Redirect logged-in users away from the login page
   if (pathname.startsWith("/auth/login") && role) {
@@ -67,31 +61,14 @@ export async function middleware(req) {
     }
   }
 
-  // Match the current route to a protected route
-  const matchingRoute = protectedRoutes.find((route) =>
-    pathname.startsWith(route.path)
-  );
-
-  if (matchingRoute) {
-    // Redirect to login if user is not authenticated
-    if (!role) {
-      url.pathname = "/auth/login";
-      url.searchParams.set("redirected", "true");
-      return NextResponse.redirect(url);
-    }
-
-    // Check if user has the required role or tab
-    if (
-      !matchingRoute.roles.includes(role) ||
-      (matchingRoute.tab && searchParams.get("tab") !== matchingRoute.tab)
-    ) {
-      return NextResponse.json(
-        { error: "You do not have access to this resource." },
-        { status: 403 }
-      );
-    }
+  // Check if the path is restricted for the user's role
+  if (role && restrictedPaths[role]?.includes(pathname)) {
+    return NextResponse.json(
+      { error: "You do not have access to this resource." },
+      { status: 403 }
+    );
   }
 
-  // Allow access to non-protected routes
+  // Allow access to non-restricted routes
   return NextResponse.next();
 }

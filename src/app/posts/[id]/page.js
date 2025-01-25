@@ -27,6 +27,7 @@ export default function PostPage() {
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     async function fetchPost() {
@@ -45,8 +46,7 @@ export default function PostPage() {
 
         const data = await response.json();
         setPost(data[0]);
-        console.log(data[0]);  
-
+        console.log(data[0]);
       } catch (error) {
         console.error("Error fetching post:", error);
       } finally {
@@ -56,6 +56,12 @@ export default function PostPage() {
 
     fetchPost();
   }, [id]);
+
+  const handleProceedToPayment = () => {
+    setShowModal(false);
+    // Navigate to package selection or payment page
+    router.push("/payment"); // Adjust this path as per your routing
+  };
 
   if (loading) {
     return <PostSkeleton />;
@@ -111,9 +117,23 @@ export default function PostPage() {
           </div>
         )}
 
-        <div className="post-content prose prose-lg dark:prose-invert max-w-none">
+        <div className={`post-content prose prose-lg dark:prose-invert max-w-none ${post?.isPremium ? "blur-sm" : ""}`}>
           {post?.content?.replace(/<\/?[^>]+(>|$)/g, "")}
         </div>
+
+        {post?.isPremium && (
+          <div className="text-center mt-6">
+            <p className="text-lg font-semibold text-muted-foreground">
+              This is premium content. To view it, you need to make a payment.
+            </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Proceed to Payment
+            </button>
+          </div>
+        )}
 
         <Card className="p-6 mt-12">
           <div className="flex items-start gap-4">
@@ -131,6 +151,24 @@ export default function PostPage() {
           </div>
         </Card>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4">Premium Content</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              To view this content, you need to purchase a package. Click the button below to proceed.
+            </p>
+            <button
+              onClick={handleProceedToPayment}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Proceed to Payment
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

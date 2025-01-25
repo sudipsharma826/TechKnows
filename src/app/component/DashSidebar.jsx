@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge, Sidebar } from 'flowbite-react';
-import { HiShoppingBag, HiOutlinePlusCircle, HiDocumentText, HiViewGrid, HiClipboardList, HiPencil } from 'react-icons/hi';
+import { HiShoppingBag, HiOutlinePlusCircle, HiDocumentText, HiViewGrid, HiClipboardList, HiPencil, HiCurrencyRupee } from 'react-icons/hi';
 import { FiEdit } from 'react-icons/fi';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
@@ -29,6 +29,9 @@ export function DashSideBar() {
               <Sidebar.Item icon={HiShoppingBag}>
                 <Link href="/page/dashboard?tab=categories">Categories</Link>
               </Sidebar.Item>
+                <Sidebar.Item icon={HiCurrencyRupee}>
+                  <Link href="/page/dashboard?tab=packages">Packages</Link>
+                </Sidebar.Item>
               <Sidebar.Collapse icon={HiOutlinePlusCircle} label="Add">
                 <Sidebar.Item icon={HiClipboardList}>
                   <Link href="/page/dashboard?tab=addcategories">Add Category</Link>

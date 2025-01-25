@@ -14,6 +14,7 @@ import GetPost from '../post/get/page';
 import RequestCategory from '../category/requestcategory/page';
 import CategoryForm from '../category/addcategory/page';
 import CategoryList from '../category/page';
+import PackagesPage from '../package/page';
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -75,6 +76,7 @@ export default function Dashboard() {
         {tab === 'addrequestcategory' && <RequestCategory />}
         {tab === 'addcategories' && <CategoryForm />}
         {tab === 'categories' && <CategoryList />}
+        {tab === 'packages' && <PackagesPage />}
         {!tab && (
           <div className="text-center">
             <p className="mt-2">Select a tab from the sidebar to begin.</p>
