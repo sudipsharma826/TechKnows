@@ -71,6 +71,16 @@ export function DashSideBar() {
               </Sidebar.Item>
             </>
           )}
+          {['superadmin', 'admin','user'].includes(currentUser?.role) && (
+            <>
+          <Sidebar.Item icon={HiViewGrid}>
+                <Link href="/page/dashboard?tab=mypayment">My Payment</Link>
+          </Sidebar.Item>
+            
+            </>
+          )}
+
+          
         </Sidebar.ItemGroup>
       </Sidebar.Items>
 

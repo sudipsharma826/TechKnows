@@ -203,20 +203,8 @@ export default function UpdatePost() {
           }}
           placeholder="Write content..."
         />
-        <div className="flex flex-wrap items-center gap-4">
-          <Checkbox
-            id="featured"
-            checked={featured}
-            onChange={(e) => setFeatured(e.target.checked)}
-          />
-          <Label htmlFor="featured">Featured Post</Label>
-          <Checkbox
-            id="premium"
-            checked={premium}
-            onChange={(e) => setPremium(e.target.checked)}
-          />
-          <Label htmlFor="premium">Premium Post</Label>
-        </div>
+        
+
         <FileInput id="image-upload" onChange={handleImageChange} />
         {previewImage ? (
           <img
@@ -244,12 +232,26 @@ export default function UpdatePost() {
             </Button>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-4 mt-5">
+          <Checkbox
+            id="featured"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+          />
+          <Label htmlFor="featured">Featured Post</Label>
+          <Checkbox
+            id="premium"
+            checked={premium}
+            onChange={(e) => setPremium(e.target.checked)}
+          />
+          <Label htmlFor="premium">Premium Post</Label>
+        </div>
         <div className="flex justify-between mt-4">
           <Button type="button" onClick={() => router.push("/")} color="failure">
             Cancel
           </Button>
-          <Button type="submit" disabled={loading} color="sucess">
-            {loading ? <Spinner size="sm" className="mr-2" /> : null}
+          <Button type="submit" disabled={loading} color="success">
+            {loading ? <Spinner size="xl" className="mr-2" /> : null}
             {loading ? "Updating..." : "Update Post"}
           </Button>
         </div>

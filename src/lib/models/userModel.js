@@ -56,6 +56,7 @@ const userSchema = new mongoose.Schema({
   otpExpiresAt: {
     type: Date,
   },
+  subscribedPackages: [ { type: mongoose.Schema.Types.ObjectId, ref: "Package" }]
   
 
 }, { timestamps: true });

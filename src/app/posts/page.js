@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Tag, Clock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function calculateReadTime(content) {
   const wordsPerMinute = 200;
@@ -22,6 +23,7 @@ function formatDate(dateString) {
 
 export default function PostsPage() {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch posts
   useEffect(() => {
@@ -37,11 +39,12 @@ export default function PostsPage() {
         setPosts(data.posts || []);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchData();
   }, []);
-
 
   return (
     <div className="container mx-auto px-4 py-12 mt-5">
@@ -51,56 +54,77 @@ export default function PostsPage() {
 
         {/* Posts Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {posts?.map((post) => (
-            <Link key={post.id} href={`/posts/${post.id}`}>
-              <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
-                {post.imageUrl && (
+          {loading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="h-full overflow-hidden">
                   <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={post.imageUrl}
-                      alt={post.title}
-                      className="object-cover w-full h-full"
-                    />
+                    <Skeleton className="w-full h-full" />
                   </div>
-                )}
-                <div className="p-6 space-y-4">
-                  {post?.categories?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {post.categories.map((category) =>
-                        typeof category === "object" ? (
-                          <Badge key={category._id} variant="secondary">
-                            <Tag className="h-3 w-3 mr-1" />
-                            {category?.name}
-                          </Badge>
-                        ) : (
-                          <Badge key={category} variant="secondary">
-                            <Tag className="h-3 w-3 mr-1" />
-                            {category}
-                          </Badge>
-                        )
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-6 w-1/2 mb-4" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <div className="flex items-center justify-between text-sm">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  </div>
+                </Card>
+              ))
+            : posts?.map((post) => (
+                <Link key={post.id} href={`/posts/${post.slug}`}>
+                  <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
+                    {post.imageUrl && (
+                      <div className="aspect-video relative overflow-hidden">
+                        <img
+                          src={post.imageUrl}
+                          alt={post.title}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6 space-y-4">
+                      {post?.categories?.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {post.categories.map((category) =>
+                            typeof category === "object" ? (
+                              <Badge key={category._id} variant="secondary">
+                                <Tag className="h-3 w-3 mr-1" />
+                                {category?.name}
+                              </Badge>
+                            ) : (
+                              <Badge key={category} variant="secondary">
+                                <Tag className="h-3 w-3 mr-1" />
+                                {category}
+                              </Badge>
+                            )
+                          )}
+                        </div>
                       )}
+                      <div>
+                        <h2 className="text-xl font-semibold mb-2">
+                          {post.title}
+                        </h2>
+                        <p className="text-muted-foreground line-clamp-2">
+                          {post.subtitle}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatDate(post.createdAt)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            {calculateReadTime(post.content)} min read
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                    <p className="text-muted-foreground line-clamp-2">
-                      {post.subtitle}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{formatDate(post.createdAt)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{calculateReadTime(post.content)} min read</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  </Card>
+                </Link>
+              ))}
         </div>
       </div>
     </div>

@@ -217,20 +217,6 @@ export default function CreatePost() {
             />
           </div>
 
-          <div className="flex items-center gap-4">
-            <Checkbox
-              id="featured"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
-            />
-            <Label htmlFor="featured">Featured Post</Label>
-            <Checkbox
-              id="premium"
-              checked={premium}
-              onChange={(e) => setPremium(e.target.checked)}
-            />
-            <Label htmlFor="premium">Premium Post</Label>
-          </div>
 
           <div>
             <Label htmlFor="image" value="Upload Image" />
@@ -250,6 +236,20 @@ export default function CreatePost() {
             )}
           </div>
 
+          <div className="flex items-center gap-4 mt-5">
+            <Checkbox
+              id="featured"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+            />
+            <Label htmlFor="featured">Featured Post</Label>
+            <Checkbox
+              id="premium"
+              checked={premium}
+              onChange={(e) => setPremium(e.target.checked)}
+            />
+            <Label htmlFor="premium">Premium Post</Label>
+          </div>
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Post"}
