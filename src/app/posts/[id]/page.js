@@ -147,6 +147,10 @@ export default function PostPage() {
     post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || ""
   );
 
+  const isSubscribed = currentUser?.subscribedPackages?.some(
+    (pkg) => pkg._id === post?.packageId
+  );
+
   return (
     <article className="container max-w-4xl mx-auto px-4 py-12 mt-10">
       <div className="space-y-8">
@@ -191,32 +195,29 @@ export default function PostPage() {
           </div>
         )}
 
-<div
-  className={`post-content prose prose-lg dark:prose-invert max-w-none ${
-    post?.isPremium && 
-    (!currentUser?.subscribedPackages || currentUser.subscribedPackages.length < 1)
-      ? "blur-sm"
-      : ""
-  }`}
->
-  {post?.content?.replace(/<\/?[^>]+(>|$)/g, "")}
-</div>
+        <div
+          className={`post-content prose prose-lg dark:prose-invert max-w-none ${
+            post?.isPremium && !isSubscribed
+              ? "blur-sm"
+              : ""
+          }`}
+        >
+          {post?.content?.replace(/<\/?[^>]+(>|$)/g, "")}
+        </div>
 
-{post?.isPremium && 
-  (!currentUser?.subscribedPackages || currentUser.subscribedPackages.length < 1) && (
-    <div className="text-center mt-6">
-      <p className="text-lg font-semibold text-muted-foreground">
-        This is premium content. To view it, you need to make a payment.
-      </p>
-      <button
-        onClick={handleProceedToPayment}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Proceed to Payment
-      </button>
-    </div>
-  )}
-
+        {post?.isPremium && !isSubscribed && (
+          <div className="text-center mt-6">
+            <p className="text-lg font-semibold text-muted-foreground">
+              This is premium content. To view it, you need to make a payment.
+            </p>
+            <button
+              onClick={handleProceedToPayment}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Proceed to Payment
+            </button>
+          </div>
+        )}
 
         <Card className="p-6 mt-12">
           <div className="flex items-start gap-4">
