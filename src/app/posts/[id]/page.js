@@ -67,8 +67,7 @@ export default function PostPage() {
           throw new Error("Failed to fetch packages");
         }
         const data = await response.json();
-        console.log("Packages:", data.data[0]);
-        setPackages(data.data);
+        setPackages(data.data[0]);
         console.log("Packages froms tate:", packages);
       } catch (err) {
         setError("Error loading packages");
@@ -149,7 +148,7 @@ export default function PostPage() {
     post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || ""
   );
 
-  const isSubscribed = packages?.subscribedBy?.includes(currentUser?._id);
+  const isSubscribed = packages?.subscribedBy.includes(currentUser?._id);
   console.log("Subscribed:", isSubscribed);
 
   return (
