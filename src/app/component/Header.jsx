@@ -162,14 +162,7 @@ export default function Header() {
                           Dashboard
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          href="/settings"
-                          className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Settings
-                        </Link>
-                      </li>
+                     
                       <li>
                         <Link
                           href="#"
@@ -236,14 +229,7 @@ export default function Header() {
                           Dashboard
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          href="/settings"
-                          className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          Settings
-                        </Link>
-                      </li>
+                      
                       <li>
                         <Link
                           href="#"
