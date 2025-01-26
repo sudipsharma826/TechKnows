@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 export const config = {
@@ -12,11 +11,10 @@ export const config = {
 
 export async function middleware(req) {
   const url = req.nextUrl.clone();
-  const { pathname } = url;
+  const { pathname, search } = url;
 
-  // Retrieve the accessToken synchronously
-  const cookieStore = cookies();
-  const accessToken = cookieStore?.get("acessToken")?.value;
+  // Retrieve cookies from the request
+  const accessToken = req.cookies.get("acessToken")?.value;
 
   let role = null;
   let isActive = null;
@@ -32,31 +30,32 @@ export async function middleware(req) {
     }
   }
 
-  // Define restricted routes for each role
+  // Define unrestricted paths and public tabs
+  const publicTabs = ["mypayment"]; 
   const restrictedPaths = {
     user: [
-      "/page/dashboard?tab=requests",
-      "/page/dashboard?tab=createpost",
-      "/page/dashboard?tab=requestcategory",
+      "requests",
+      "createpost",
+      "requestcategory",
+      "categories",
+      "addcategory",
+      "packages",
+      "addcategories",
+      "addpackages",
+      "getpost",
     ],
-    admin: [
-      "/page/dashboard?tab=categories",
-      "/page/dashboard?tab=requests",
-    ],
-    superadmin: [], // No restricted paths for superadmin
+    admin: ["categories", "requests", "packages", "addcategory"],
+    superadmin: [], 
   };
 
-  // Redirect logged-in users away from the login page
-  if (pathname.startsWith("/auth/login") && role) {
-    url.pathname = "/page/dashboard"; // Redirect to dashboard
-    return NextResponse.redirect(url);
-  }
-
-  // Redirect unauthenticated users to login page
-  if (!accessToken && pathname !== "/auth/login") {
-    url.pathname = "/auth/login";
-    url.searchParams.set("redirected", "true");
-    return NextResponse.redirect(url);
+  // Handle unauthenticated users
+  if (!accessToken) {
+    if (pathname !== "/auth/login") {
+      url.pathname = "/auth/login";
+      url.searchParams.set("redirected", "true");
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next(); 
   }
 
   // Handle inactive accounts
@@ -69,20 +68,31 @@ export async function middleware(req) {
       );
       return NextResponse.redirect(url);
     }
+    return NextResponse.next(); // Allow access to login page
+  }
+
+  // Extract `tab` parameter from the query string
+  const tab = new URLSearchParams(search).get("tab");
+
+  // Allow access to public tabs for all authenticated users
+  if (publicTabs.includes(tab)) {
+    return NextResponse.next();
   }
 
   // Check if the path is restricted for the user's role
-  const queryParams = pathname.includes("?") ? pathname.split("?")[1] : "";
-  const cleanPath = pathname.split("?")[0];
-  const fullPath = `${cleanPath}?${queryParams}`;
-
-  if (role && restrictedPaths[role]?.includes(fullPath)) {
+  if (role && tab && restrictedPaths[role]?.includes(tab)) {
     return NextResponse.json(
       { error: "You do not have access to this resource." },
       { status: 403 }
     );
   }
 
-  // Allow access to non-restricted routes
+  // Redirect logged-in users away from the login page
+  if (pathname.startsWith("/auth/login") && role) {
+    url.pathname = "/page/dashboard";
+    return NextResponse.redirect(url);
+  }
+
+  // Allow access to all other routes
   return NextResponse.next();
 }

@@ -44,7 +44,7 @@ export async function GET(req) {
     const packages = await Package.find({});
 
     return new Response(
-      JSON.stringify({ success: true, data: packages }),
+      JSON.stringify({ packages }),
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@ export async function GET(req) {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ success: false, message: 'Internal server error', error: error.message }),
+      JSON.stringify({ message: 'Internal server error', error: error.message }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

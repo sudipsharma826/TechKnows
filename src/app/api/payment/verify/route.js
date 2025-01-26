@@ -16,37 +16,23 @@ export async function GET(req) {
 
     // Validate required parameters
     if (!pidx || !status || !purchase_order_id) {
-      console.error("Missing required query parameters");
       return new Response("Missing query parameters", { status: 400 });
     }
 
-    // Validate environment variable
-    const secretKey = process.env.KHALTI_SECRET_KEY;
-    if (!secretKey) {
-      console.error("Khalti secret key is missing in environment variables");
-      return new Response("Server configuration error", { status: 500 });
-    }
-
     // Verify payment using Khalti's lookup API
-    const khaltiResponse = await fetch("https://dev.khalti.com/api/v2/epayment/lookup/", {
+    const khaltiResponse = await fetch("https://a.khalti.com/api/v2/epayment/lookup/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Key ${secretKey}`,
+        Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
       },
       body: JSON.stringify({ pidx }),
     });
 
-    if (!khaltiResponse.ok) {
-      console.error("Khalti API verification failed:", khaltiResponse.status);
-      return new Response("Payment verification failed", { status: khaltiResponse.status });
-    }
-
     const khaltiData = await khaltiResponse.json();
-    console.log("Khalti verification response:", khaltiData);
 
-    if (khaltiData.status === "Completed" && khaltiData.pidx === pidx) {
-      // Update payment status and add to subscribedBy
+    if (khaltiResponse.ok && khaltiData.status === "Completed" && khaltiData.pidx === pidx) {
+      // Update payment status to "Completed"
       const payment = await Payment.findOneAndUpdate(
         { epayment_id: khaltiData.pidx },
         { status: "Completed" },
@@ -54,39 +40,26 @@ export async function GET(req) {
       );
 
       if (!payment) {
-        console.error("Payment not found for pidx:", pidx);
         return new Response("Payment not found", { status: 404 });
       }
 
-      const packageId = payment.packageId;
-      const userId = payment.userId;
+      const { packageId, userId } = payment;
 
-      await Package.findByIdAndUpdate(
-        packageId,
-        { $addToSet: { subscribedBy: userId } },
-        { new: true }
-      );
+      // Update package and user subscriptions
+      await Package.findByIdAndUpdate(packageId, { $addToSet: { subscribedBy: userId } });
+      await User.findByIdAndUpdate(userId, { $addToSet: { subscribedPackages: packageId } });
 
-      await User.findByIdAndUpdate(
-        userId,
-        { $addToSet: { subscribedPackages: packageId } },
-        { new: true }
-      );
-
-      console.log("Payment successfully verified and user updated");
       return new Response("", {
-        status: 200,
+        status: 302, // Redirect response
         headers: { Location: "/page/dashboard?tab=mypayment" },
       });
     } else {
-      console.error("Payment verification failed for pidx:", pidx);
       return new Response("", {
-        status: 400,
+        status: 302,
         headers: { Location: "/" },
       });
     }
   } catch (error) {
-    console.error("Error verifying payment:", error);
     return new Response("Internal server error", { status: 500 });
   }
 }

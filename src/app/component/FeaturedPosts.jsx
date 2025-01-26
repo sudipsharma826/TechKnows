@@ -8,10 +8,11 @@ export default function FeaturedPosts({ posts }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate data fetching delay
-    const timer = setTimeout(() => setLoading(false), 5500); 
-    return () => clearTimeout(timer);
-  }, []);
+    // Set loading to false only if posts are available
+    if (posts?.length > 0) {
+      setLoading(false);
+    }
+  }, [posts]);
 
   return (
     <section className="py-12 bg-background">

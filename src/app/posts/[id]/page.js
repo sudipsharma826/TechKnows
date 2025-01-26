@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { Clock, Calendar, User, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,14 @@ export default function PostPage() {
   const params = useParams();
   const id = params?.id;
 
-  const currentUser = useSelector((state) => state.user.currentUser); // Get current user from Redux
+  const currentUser = useSelector((state) => state.user.currentUser);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [packages, setPackages] = useState([]);
+  const [availablePackages, setAvailablePackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [error, setError] = useState(null);
-  const [orderId, setOrderId] = useState(null); // Store order_id here
+  const [orderId, setOrderId] = useState(null);
 
   useEffect(() => {
     async function fetchPost() {
@@ -51,6 +52,10 @@ export default function PostPage() {
           }),
         });
 
+        if (!response.ok) {
+          throw new Error("Failed to fetch post");
+        }
+
         const data = await response.json();
         setPost(data[0]);
       } catch (error) {
@@ -66,62 +71,70 @@ export default function PostPage() {
         if (!response.ok) {
           throw new Error("Failed to fetch packages");
         }
+
         const data = await response.json();
-        setPackages(data.data);
-      } catch (err) {
-        setError("Error loading packages");
-        console.error(err);
+        setPackages(data.packages);
+
+        // Filter out packages the current user hasn't subscribed to
+        const available = data.packages.filter(
+          (pkg) =>
+            Array.isArray(pkg.subscribedBy) &&
+            !pkg.subscribedBy.includes(currentUser?._id)
+        );
+        setAvailablePackages(available);
+      } catch (error) {
+        console.error("Error loading packages:", error);
       }
     }
 
     fetchPost();
-
-   
-     
-    
-  }, [id, currentUser, router]);
+    fetchPackages();
+  }, [currentUser, id]);
 
   const handleProceedToPayment = () => {
     if (!currentUser) {
-      router.push("/auth/login"); // Redirect to login if not logged in
+      router.push("/auth/login");
     } else {
       setShowModal(true);
-      setOrderId(createOrderId()); // Set order_id when modal is shown
+      setOrderId(createOrderId());
     }
   };
 
-  const createOrderId = () => {
-    return Math.floor(Math.random() * 1000000);
-  };
+  const createOrderId = () => Math.floor(Math.random() * 1000000);
 
   const handlePackageSelect = (e) => {
     const packageId = e.target.value;
-    const selected = packages.find((pkg) => pkg._id === packageId);
+    const selected = availablePackages.find((pkg) => pkg._id === packageId);
     setSelectedPackage(selected);
   };
 
   const handleProceedToPaymentConfirm = async () => {
     if (!selectedPackage || !orderId) return;
 
-    const response = await fetch("/api/payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: currentUser?._id,
-        packageId: selectedPackage?._id,
-        amount: selectedPackage?.price,
-        order_id: orderId,
-      }),
-    });
+    try {
+      const response = await fetch("/api/payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUser?._id,
+          packageId: selectedPackage._id,
+          amount: selectedPackage.price,
+          order_id: orderId,
+        }),
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      window.location.href = data.paymentUrl;
-      toast.info("Redirecting to payment gateway...");
-    } else {
-      toast.error("Payment failed");
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.paymentUrl;
+        toast.info("Redirecting to payment gateway...");
+      } else {
+        toast.error("Payment failed");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("An error occurred while processing your payment.");
     }
   };
 
@@ -133,21 +146,9 @@ export default function PostPage() {
     return <div>Post not found</div>;
   }
 
-  const calculateExpiryDate = (expiryTime) => {
-    const currentDate = new Date();
-    const expiryDate = new Date(currentDate);
-    expiryDate.setDate(currentDate.getDate() + expiryTime);
-    return expiryDate.toISOString().split("T")[0];
-  };
-
-  const readTime = calculateReadTime(
-    post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || ""
-  );
-
-  // Determine if the user is subscribed to the selected package
-  const isSubscribed = packages.some(pkg => 
-    pkg.subscribedBy.includes(currentUser?._id)
-  );
+  const isSubscribedToPremium = post?.isPremium
+    ? packages.some((pkg) => pkg.subscribedBy.includes(currentUser?._id))
+    : true;
 
   return (
     <article className="container max-w-4xl mx-auto px-4 py-12 mt-10">
@@ -167,13 +168,13 @@ export default function PostPage() {
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span>{readTime} min read</span>
+              <span>{calculateReadTime(post.content)} min read</span>
             </div>
           </div>
 
           {post?.categories?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {post?.categories?.map((category) => (
+              {post.categories.map((category) => (
                 <Badge key={category.id || category._id} variant="secondary">
                   <Tag className="h-3 w-3 mr-1" />
                   {category?.name}
@@ -195,13 +196,13 @@ export default function PostPage() {
 
         <div
           className={`post-content prose prose-lg dark:prose-invert max-w-none ${
-            post?.isPremium && !isSubscribed ? "blur-sm" : ""
+            post?.isPremium && !isSubscribedToPremium ? "blur-sm" : ""
           }`}
         >
           {post?.content?.replace(/<\/?[^>]+(>|$)/g, "")}
         </div>
 
-        {post?.isPremium && !isSubscribed && (
+        {post?.isPremium && !isSubscribedToPremium && (
           <div className="text-center mt-6">
             <p className="text-lg font-semibold text-muted-foreground">
               This is premium content. To view it, you need to make a payment.
@@ -238,7 +239,6 @@ export default function PostPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
             <h2 className="text-xl font-bold mb-4">Select a Package</h2>
-            {error && <p className="text-red-600 mb-4">{error}</p>}
 
             <div>
               <select
@@ -248,12 +248,11 @@ export default function PostPage() {
                 <option value="" disabled selected>
                   Select a Package
                 </option>
-                {Array.isArray(packages) &&
-                  packages.map((pkg) => (
-                    <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - {pkg.price} NPR (Expiry: {pkg.expiryTime} days)
-                    </option>
-                  ))}
+                {availablePackages.map((pkg) => (
+                  <option key={pkg._id} value={pkg._id}>
+                    {pkg.name} - {pkg.price} NPR (Expiry: {pkg.expiryTime} days)
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -269,11 +268,6 @@ export default function PostPage() {
                   </p>
                   <p>
                     <strong>Price:</strong> {selectedPackage.price} NPR
-                  </p>
-                  <p>
-                    <strong>Expiry Date:</strong> {calculateExpiryDate(
-                      selectedPackage.expiryTime
-                    )}
                   </p>
                 </div>
 

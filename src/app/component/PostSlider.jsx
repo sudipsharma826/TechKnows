@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Carousel,
   CarouselContent,
@@ -17,10 +16,10 @@ export default function PostSlider({ posts }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate a data loading delay
-    const timer = setTimeout(() => setLoading(false), 5500);
-    return () => clearTimeout(timer);
-  }, []);
+    if (posts?.length > 0) {
+      setLoading(false); // Stop loading if posts data is available
+    }
+  }, [posts]);
 
   return (
     <section className="py-12 bg-background">
@@ -71,8 +70,8 @@ export default function PostSlider({ posts }) {
                       <CardContent className="p-4">
                         <div className="relative w-full h-48 mb-4">
                           <Image
-                            src={post?.imageUrl }
-                            alt={post?.title}
+                            src={post?.imageUrl || "/placeholder-image.jpg"}
+                            alt={post?.title || "Post image"}
                             fill
                             className="object-cover rounded-lg"
                           />
@@ -81,17 +80,14 @@ export default function PostSlider({ posts }) {
                           {post?.title || "Untitled"}
                         </h3>
                         <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {post?.content?.replace(/<\/?[^>]+(>|$)/g, "") ||
-                            "No content available."}
+                          {post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || "No content available."}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <div className="relative w-8 h-8 rounded-full overflow-hidden">
                               <Image
-                                src={post?.createdBy?.profilePicture}
-                                alt={
-                                  post?.createdBy?.displayName || "Author"
-                                }
+                                src={post?.createdBy?.profilePicture || "/default-avatar.jpg"}
+                                alt={post?.createdBy?.displayName || "Author"}
                                 fill
                                 className="object-cover"
                               />
