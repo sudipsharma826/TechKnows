@@ -10,8 +10,9 @@ export default function HeroSection() {
     <div className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-background to-secondary/20">
       <div className="container px-4 md:px-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-center">
+          {/* Left Content */}
           <div className="flex flex-col justify-center space-y-4">
-            <div className="space-y-2 sm:mt-10">
+            <div className="space-y-2 mt-20">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                 Discover the World of
                 <span className="text-primary"> Reading & Writing</span>
@@ -28,20 +29,27 @@ export default function HeroSection() {
               </Link>
             </div>
           </div>
+          {/* Right Animation */}
           <div className="relative h-[400px] flex items-center justify-center">
-            {/* <motion.div
+            <motion.div
+            drag="x" // Dragging only allowed horizontally
+            dragConstraints={{ left: 0, right: 0 }} // No movement beyond its bounds
+            // className="w-64 h-64 bg-blue-500"
               animate={{
                 rotate: [0, 360],
               }}
               transition={{
                 duration: 20,
                 repeat: Infinity,
-                ease: "linear"
+                ease: 'linear',
               }}
               className="absolute inset-0 flex items-center justify-center"
             >
               <div className="relative w-64 h-64">
                 <motion.div
+                drag="x" // Dragging only allowed horizontally
+                dragConstraints={{ left: 0, right: 0 }} // No movement beyond its bounds
+                // className="w-64 h-64 bg-blue-500"
                   className="absolute inset-0 flex items-center justify-center"
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -56,7 +64,7 @@ export default function HeroSection() {
                   <PenTool className="w-24 h-24 text-primary opacity-50" />
                 </motion.div>
               </div>
-            </motion.div> */}
+            </motion.div>
           </div>
         </div>
       </div>

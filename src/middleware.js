@@ -12,10 +12,10 @@ export const config = {
 
 export async function middleware(req) {
   const url = req.nextUrl.clone();
-  const { pathname, searchParams } = url;
+  const { pathname } = url;
 
-  // Retrieve the accessToken from cookies
-  const cookieStore = await cookies();
+  // Retrieve the accessToken synchronously
+  const cookieStore = cookies();
   const accessToken = cookieStore.get("acesstoken")?.value;
 
   let role = null;
@@ -34,8 +34,15 @@ export async function middleware(req) {
 
   // Define restricted routes for each role
   const restrictedPaths = {
-    user: ["/page/dashboard/requests", "/page/dashboard/admin-only"], // Paths restricted to 'user'
-    admin: ["/page/dashboard/requests","/page/dashboard/packages"], // Paths restricted to 'admin'
+    user: [
+      "/page/dashboard?tab=requests",
+      "/page/dashboard?tab=createpost",
+      "/page/dashboard?tab=requestcategory",
+    ],
+    admin: [
+      "/page/dashboard?tab=categories",
+      "/page/dashboard?tab=requests",
+    ],
     superadmin: [], // No restricted paths for superadmin
   };
 
@@ -56,13 +63,20 @@ export async function middleware(req) {
   if (isActive === false) {
     if (pathname !== "/auth/login") {
       url.pathname = "/auth/login";
-      url.searchParams.set("toastMessage", "Your account is not verified. Please verify your email and login again.");
+      url.searchParams.set(
+        "toastMessage",
+        "Your account is not verified. Please verify your email and login again."
+      );
       return NextResponse.redirect(url);
     }
   }
 
   // Check if the path is restricted for the user's role
-  if (role && restrictedPaths[role]?.includes(pathname)) {
+  const queryParams = pathname.includes("?") ? pathname.split("?")[1] : "";
+  const cleanPath = pathname.split("?")[0];
+  const fullPath = `${cleanPath}?${queryParams}`;
+
+  if (role && restrictedPaths[role]?.includes(fullPath)) {
     return NextResponse.json(
       { error: "You do not have access to this resource." },
       { status: 403 }

@@ -26,6 +26,8 @@
 
 body {
   background: rgb(var(--background-rgb));
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 /* Custom styles for Navbar */
