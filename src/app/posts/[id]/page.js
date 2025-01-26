@@ -76,11 +76,9 @@ export default function PostPage() {
 
     fetchPost();
 
-    if (currentUser) {
-      fetchPackages();
-    } else {
-      router.push("/auth/login"); // Redirect to login if not logged in
-    }
+   
+     
+    
   }, [id, currentUser, router]);
 
   const handleProceedToPayment = () => {
