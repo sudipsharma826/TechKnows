@@ -26,7 +26,7 @@ export async function POST(req, res) {
     const headers = new Headers();
     headers.set(
       'Set-Cookie', 
-      'acesstoken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict; Secure'
+      'acessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict; Secure'
     );
 
     return new Response(
