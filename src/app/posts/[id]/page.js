@@ -67,7 +67,7 @@ export default function PostPage() {
           throw new Error("Failed to fetch packages");
         }
         const data = await response.json();
-        setPackages(data.data || []);
+        setPackages(data.data);
       } catch (err) {
         setError("Error loading packages");
         console.error(err);
@@ -146,7 +146,10 @@ export default function PostPage() {
     post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || ""
   );
 
-  const isSubscribed = Array.isArray(packages?.subscribedBy) && packages?.subscribedBy.includes(currentUser?._id);
+  // Determine if the user is subscribed to the selected package
+  const isSubscribed = packages.some(pkg => 
+    pkg.subscribedBy.includes(currentUser?._id)
+  );
 
   return (
     <article className="container max-w-4xl mx-auto px-4 py-12 mt-10">

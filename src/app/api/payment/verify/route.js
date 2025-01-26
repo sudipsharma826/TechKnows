@@ -75,7 +75,7 @@ export async function GET(req) {
 
       console.log("Payment successfully verified and user updated");
       return new Response("", {
-        status: 303,
+        status: 200,
         headers: { Location: "/page/dashboard?tab=mypayment" },
       });
     } else {

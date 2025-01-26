@@ -1,14 +1,6 @@
 import connect from '@/lib/mongodb/mongoose';
 import Package from '@/lib/models/packageModel';
 
-const handleError = (error) => {
-  console.error(error);
-  return new Response(
-    JSON.stringify({ success: false, message: 'Internal server error', error }),
-    { status: 500 }
-  );
-};
-
 export async function POST(req) {
   await connect();
 
@@ -18,7 +10,10 @@ export async function POST(req) {
     if (!name || !price || !expiryTime || !description) {
       return new Response(
         JSON.stringify({ success: false, message: 'Missing required fields' }),
-        { status: 400 }
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -26,10 +21,19 @@ export async function POST(req) {
 
     return new Response(
       JSON.stringify({ success: true, message: 'Package created successfully', data: newPackage }),
-      { status: 201 }
+      {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   } catch (error) {
-    return handleError(error);
+    return new Response(
+      JSON.stringify({ success: false, message: 'Internal server error', error: error.message }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -38,12 +42,22 @@ export async function GET(req) {
 
   try {
     const packages = await Package.find({});
+
     return new Response(
       JSON.stringify({ success: true, data: packages }),
-      { status: 200 }
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   } catch (error) {
-    return handleError(error);
+    return new Response(
+      JSON.stringify({ success: false, message: 'Internal server error', error: error.message }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -51,12 +65,15 @@ export async function PUT(req) {
   await connect();
 
   try {
-    const { id, name, price, expiryTime, description } = await req.json();  // Get data from body
+    const { id, name, price, expiryTime, description } = await req.json();
 
     if (!id || !name || !price || !expiryTime || !description) {
       return new Response(
         JSON.stringify({ success: false, message: 'Missing required fields' }),
-        { status: 400 }
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -69,16 +86,28 @@ export async function PUT(req) {
     if (!updatedPackage) {
       return new Response(
         JSON.stringify({ success: false, message: 'Package not found' }),
-        { status: 404 }
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
     }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Package updated successfully', data: updatedPackage }),
-      { status: 200 }
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   } catch (error) {
-    return handleError(error);
+    return new Response(
+      JSON.stringify({ success: false, message: 'Internal server error', error: error.message }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -86,12 +115,15 @@ export async function DELETE(req) {
   await connect();
 
   try {
-    const { id } = await req.json();  // Get the ID from the request body
+    const { id } = await req.json();
 
     if (!id) {
       return new Response(
         JSON.stringify({ success: false, message: 'Missing package ID' }),
-        { status: 400 }
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -100,15 +132,27 @@ export async function DELETE(req) {
     if (!deletedPackage) {
       return new Response(
         JSON.stringify({ success: false, message: 'Package not found' }),
-        { status: 404 }
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
     }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Package deleted successfully', data: deletedPackage }),
-      { status: 200 }
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   } catch (error) {
-    return handleError(error);
+    return new Response(
+      JSON.stringify({ success: false, message: 'Internal server error', error: error.message }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
