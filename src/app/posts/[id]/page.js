@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 function calculateReadTime(content) {
   const wordsPerMinute = 200;
-  const words = content?.split(/\s+/).length;
+  const words = content?.split(/\s+/).length || 0;
   return Math.ceil(words / wordsPerMinute);
 }
 
@@ -67,8 +67,7 @@ export default function PostPage() {
           throw new Error("Failed to fetch packages");
         }
         const data = await response.json();
-        setPackages(data.data[0]);
-        console.log("Packages froms tate:", packages);
+        setPackages(data.data || []);
       } catch (err) {
         setError("Error loading packages");
         console.error(err);
@@ -93,7 +92,6 @@ export default function PostPage() {
     }
   };
 
-  // Create order_id function
   const createOrderId = () => {
     return Math.floor(Math.random() * 1000000);
   };
@@ -141,15 +139,14 @@ export default function PostPage() {
     const currentDate = new Date();
     const expiryDate = new Date(currentDate);
     expiryDate.setDate(currentDate.getDate() + expiryTime);
-    return expiryDate.toISOString().split("T")[0]; // Return formatted date (YYYY-MM-DD)
+    return expiryDate.toISOString().split("T")[0];
   };
 
   const readTime = calculateReadTime(
     post?.content?.replace(/<\/?[^>]+(>|$)/g, "") || ""
   );
 
-  const isSubscribed = packages?.subscribedBy.includes(currentUser?._id);
-  console.log("Subscribed:", isSubscribed);
+  const isSubscribed = Array.isArray(packages?.subscribedBy) && packages?.subscribedBy.includes(currentUser?._id);
 
   return (
     <article className="container max-w-4xl mx-auto px-4 py-12 mt-10">
@@ -176,7 +173,7 @@ export default function PostPage() {
           {post?.categories?.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {post?.categories?.map((category) => (
-                <Badge key={category.id} variant="secondary">
+                <Badge key={category.id || category._id} variant="secondary">
                   <Tag className="h-3 w-3 mr-1" />
                   {category?.name}
                 </Badge>
@@ -197,9 +194,7 @@ export default function PostPage() {
 
         <div
           className={`post-content prose prose-lg dark:prose-invert max-w-none ${
-            post?.isPremium && !isSubscribed
-              ? "blur-sm"
-              : ""
+            post?.isPremium && !isSubscribed ? "blur-sm" : ""
           }`}
         >
           {post?.content?.replace(/<\/?[^>]+(>|$)/g, "")}
@@ -238,7 +233,6 @@ export default function PostPage() {
         </Card>
       </div>
 
-      {/* Modal for Package Selector */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
@@ -253,11 +247,12 @@ export default function PostPage() {
                 <option value="" disabled selected>
                   Select a Package
                 </option>
-                {packages?.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.name} - {pkg.price} NPR (Expiry: {pkg.expiryTime} days)
-                  </option>
-                ))}
+                {Array.isArray(packages) &&
+                  packages.map((pkg) => (
+                    <option key={pkg._id} value={pkg._id}>
+                      {pkg.name} - {pkg.price} NPR (Expiry: {pkg.expiryTime} days)
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -267,8 +262,7 @@ export default function PostPage() {
                 <div className="mt-4">
                   <p>
                     <strong>Order Id:</strong> {orderId}
-                  </p>{" "}
-                  {/* Display the stored order_id */}
+                  </p>
                   <p>
                     <strong>Package Name:</strong> {selectedPackage.name}
                   </p>
@@ -276,8 +270,9 @@ export default function PostPage() {
                     <strong>Price:</strong> {selectedPackage.price} NPR
                   </p>
                   <p>
-                    <strong>Expiry Date:</strong>{" "}
-                    {calculateExpiryDate(selectedPackage.expiryTime)}
+                    <strong>Expiry Date:</strong> {calculateExpiryDate(
+                      selectedPackage.expiryTime
+                    )}
                   </p>
                 </div>
 

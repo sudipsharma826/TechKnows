@@ -76,11 +76,14 @@ export async function GET(req) {
       console.log("Payment successfully verified and user updated");
       return new Response("", {
         status: 303,
-        headers: { Location: "/" },
+        headers: { Location: "/page/dashboard?tab=mypayment" },
       });
     } else {
       console.error("Payment verification failed for pidx:", pidx);
-      return new Response("Payment verification failed", { status: 400 });
+      return new Response("", {
+        status: 400,
+        headers: { Location: "/" },
+      });
     }
   } catch (error) {
     console.error("Error verifying payment:", error);

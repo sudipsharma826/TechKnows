@@ -18,7 +18,7 @@ export default function PostSlider({ posts }) {
 
   useEffect(() => {
     // Simulate a data loading delay
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 5500);
     return () => clearTimeout(timer);
   }, []);
 

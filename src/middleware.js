@@ -16,7 +16,7 @@ export async function middleware(req) {
 
   // Retrieve the accessToken synchronously
   const cookieStore = cookies();
-  const accessToken = cookieStore.get("acessToken")?.value;
+  const accessToken = cookieStore?.get("acessToken")?.value;
 
   let role = null;
   let isActive = null;

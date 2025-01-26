@@ -20,7 +20,7 @@ export default function AllPosts({ posts, categories }) {
 
   useEffect(() => {
     // Simulate data fetching delay
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 5500);
     return () => clearTimeout(timer);
   }, []);
 
