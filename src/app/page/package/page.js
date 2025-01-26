@@ -22,7 +22,7 @@ export default function PackagesPage() {
     try {
       const response = await fetch("/api/packages");
       const data = await response.json();
-      setPackages(data.data);
+      setPackages(data.packages);
     } catch (error) {
       toast.error("Error fetching packages!");
     }
