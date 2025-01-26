@@ -22,7 +22,7 @@ const VerifyPage = ({ params }) => {
     try {
       setLoading(true); // Start loading state
 
-      const response = await fetch(`/api/auth/verify`, {
+      const response = await fetch(`/api/auth/login`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ verificationToken }),
