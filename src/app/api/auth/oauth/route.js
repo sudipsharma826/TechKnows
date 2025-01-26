@@ -36,7 +36,7 @@ export async function POST(req) {
       );
 
       // Set the token in a cookie
-      const serialized = serialize('acesstoken', token, {
+      const serialized = serialize('acessToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', 
         sameSite: 'Strict',
@@ -80,7 +80,7 @@ export async function POST(req) {
       );
 
       // Set the token in a cookie
-      const serialized = serialize('acesstoken', token, {
+      const serialized = serialize('acessToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', 
         sameSite: 'Strict',
