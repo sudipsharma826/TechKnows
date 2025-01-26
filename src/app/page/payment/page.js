@@ -31,7 +31,7 @@ export default function PaymentTable() {
         }
 
         const data = await response.json();
-        console.log("Payment data:", data);
+
         setPayments(data?.data || []);
       } catch (error) {
         console.error('Error fetching payments:', error);

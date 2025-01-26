@@ -83,3 +83,43 @@ export async function POST(req) {
     );
   }
 }
+
+//Get Payment details
+export async function PATCH(req) {
+  await connect();
+
+  try {
+    const { userId } = await req.json();
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ success: false, message: "User ID is required" }),
+        { status: 400 }
+      );
+    }
+
+    //Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ success: false, message: "User not found" }),
+        { status: 404 }
+      );
+    }
+    //Check if use is superamin ( to get all payments)
+    if (user.role === "superadmin") {
+      const payments = await Payment.find();
+      return new Response(JSON.stringify({ success: true, data: payments }), { status: 200 });
+    }
+
+    //Of rother paymnet deatils with its uerID
+    if (user.role !== "superadmin") {
+      const payments = await Payment.find({ userId });
+      return new Response(JSON.stringify({ success: true, data: payments }), { status: 200 });
+    }
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ success: false, message: error.message || "Internal Server Error" }),
+      { status: 500 }
+    );
+  }
+}
